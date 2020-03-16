@@ -1,0 +1,17 @@
+.idea/
+__pycache__/
+operation_data/__pycache__/
+tool/__pyche__/
+config/__pyche__/
+main/__pycache__/
+report/
+operation_data/backup/
+tool/backup/
+config/backup/
+main/backup/
+dataCase/backup/
+*.html
+*.pyc
+*.log
+./AutoInterTest_Datadepend.sublime-project
+./AutoInterTest_Datadepend.sublime-workspace

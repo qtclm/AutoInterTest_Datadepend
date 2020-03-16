@@ -1,0 +1,95 @@
+ #配置信息
+Config_Try_Num:
+  1 #失败重试次数
+
+Dingtalk_access_token:
+   ""  #钉钉配置
+
+#依赖key关键字
+dependKey:
+  dependKeyRow_
+#依赖字段关键字
+dependField:
+  dependFieldRow_
+#sql执行结果关键字
+sqlExecuteResult:
+  SqlExecuteResultRow_
+
+#定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
+crm_headerFlag:
+  crm
+fwh_headerFlag:
+  fwhc
+fwh_admin_headerFlag:
+  fwh_admin
+No_auth_headerFlag:
+  notoken
+
+config:
+   #crm相关
+  database_test_addr: &database_test_addr
+    47.112.126.72 #测试环境数据库配置
+  crm_test_api: &test_api
+    http://47.112.126.72:8099 #CRM测试接口地址
+   # crm登录域名信息
+  crm_login_server:  &crm_login_server
+    http://crmlogin.test.langpedu.com:8092 #crm_login_server
+  url_login_in: &url_login_in
+    http://47.112.126.72:8081
+  crm_front_addr: &crm_front_addr
+    http://47.112.126.72:8083/
+  fwhadmin_front_addr: &fwhadmin_front_addr
+    https://fwh.lpcollege.com/admin.php/system/publics/index.html
+  fwh_readAndWriteSeparation: &fwh_readAndWriteSeparation
+    47.112.99.239 #服务号读写分离数据库地址
+  fwh_test_api: &fwh_test_api
+   https://fwh.lpcollege.com/index.php?s= #服务号微信端测试接口地址
+  fwh_admin_test_api: &fwh_admin_test_api
+   https://fwh.lpcollege.com/admin.php  #服务号后台测试接口地址
+  sign_str: &sign_str
+   langpei@123onlytest
+  Encay_str: &Encay_str
+   994N7GpYjPM/}rmx,LCxGJP3si?D&5
+  local_sign_addr: &local_sign_addr
+    127.0.0.1 #本地签到系统地址
+  local_sign_api: http://127.0.0.1/index.php
+ # 企业大学相关
+  CorporateUniversity_dev_interfaceHost: &CorporateUniversity_dev_interfaceHost
+    http://cedu.langpedu.com
+  CorporateUniversity_test_interfaceHost: &CorporateUniversity_test_interfaceHost
+    http://cedu.test.langpedu.com
+ #数据库相关配置
+   # mysql通用基础配置
+  mysqlConf_common: &common
+    port: 3306
+    db: ''
+    charset: utf8
+    use_unicode: True
+  tencent_cloud_host: &tencent_cloud_host
+    122.51.175.10
+  #  tencent_cloud_mysql_conf
+  tencent_cloud_mysql_conf:
+    host: *tencent_cloud_host
+    user: select
+    passwd: select123
+    <<: *common #引用描点
+
+  # tencent_cloud_mongodb_conf
+  tencent_cloud_mongodb:
+    host: *tencent_cloud_host
+    user: chenwei
+    password: 123456Aa
+    port: 27017
+  # tencent_cloud_redis_conf
+  tencent_cloud_redis:
+    host: *tencent_cloud_host
+    password: Test@redis2019
+    port: 6379
+
+ #信息头
+  headers_form_urlencoded: {"Content-Type":"application/x-www-form-urlencoded"} #请求格式为字符串时使用crm，fwh普通请求均可使用
+  headers_json: {"Content-Type":"application/json"} #请求数据为json格式时使用
+  headers_text: {"Content-Type":"text/html"} #服务号微信端上传图片（头像）
+  headers_form_data: {"Content-Type":"multipart/form-data"} #请求数据为表单，crm上传文件（会务指南），服务号后台上传课程附件/图片
+  headers_xml_fwh_admin: {"x-requested-with":"XMLHttpRequest"} #服务号后台请求信息头
+
