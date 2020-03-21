@@ -1,12 +1,3 @@
-dependKeyRow_5:
-- $.data[*].ban_name
-- $.data[*].link
-- $.data[*].sort
-- $.data[*].is_show
-- $.data[*].file
-- $.data[*].image
-- $.data[*].__token__
-- $.data[*].ban_id
 dependKeyRow_3:
 - $.data.data[*].course_name_id
 - $.data.data[*].course_name_sn
@@ -21,6 +12,15 @@ dependKeyRow_3:
 - $.data.data[*].use_card_number
 - $.data.data[*].is_auto_refund
 - $.data.data[*].is_refund_audit
+dependKeyRow_5:
+- $.data[*].ban_name
+- $.data[*].link
+- $.data[*].sort
+- $.data[*].is_show
+- $.data[*].file
+- $.data[*].image
+- $.data[*].__token__
+- $.data[*].ban_id
 dependKeyRow_7:
 - $.data.nicke_name
 - $.data.timestamp

@@ -1,7 +1,7 @@
 from tool.OperationRequestData import operationRequestData
 from tool.operation_logging import MyLog,logs
 from tool.runmethod import RunMethod
-from tool.common_util import CommonUtil
+from tool.CommonAssert import CommonAssert
 from tool.send_email import SendEmail
 from tool.OperationDatas import OperationYaml,OperationJson
 
@@ -12,11 +12,11 @@ class Tool(object):
         self.mylog=MyLog.get_log()#日志
         self.log = self.mylog.get_logger()#获取日志创建对象
         self.run_method = RunMethod()#通过请求封装
-        self.com_util = CommonUtil()#通用预期与实际结果判断
+        self.com_assert = CommonAssert()#通用预期与实际结果判断
         self.send_mail=SendEmail()#邮件发送
         self.json=OperationJson()
         # 默认读取config，此文件只读不写
-        self.yaml=OperationYaml()
+        self.yaml=OperationYaml().readDataForKey('config')
         
 
 # '''数据库操作相关'''

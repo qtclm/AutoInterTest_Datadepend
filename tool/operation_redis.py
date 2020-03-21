@@ -172,4 +172,5 @@ class OperationRedis(object):
         self.pipeline.execute()
 
 if __name__=="__main__":
-    OperationRedis()
+    re=OperationRedis()
+    re.string_get('key')

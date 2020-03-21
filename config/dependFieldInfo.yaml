@@ -1,25 +1,25 @@
+dependFieldRow_3:
+  course_class_id: 7
+  course_name: "\u62A2\u8DD1\u201C\u5F00\u5B66\u5B63\u201D\u2014\u2014\u6717\u57F9\
+    F4\u5BFC\u5E08\u5F00\u5B6621\u5929\u966A\u7EC3\u8425\u201D"
+  course_name_id: 188
+  course_name_sn: ZB_01_04_01
+  hr_id: 2
+  is_auto_refund: 1
+  is_deposit: 1
+  is_refund_audit: 0
+  least_price: '1980.00'
+  member_price: '1980.00'
+  meth_id: 2
+  price: '1980.00'
+  use_card_number: 1
 dependFieldRow_5:
   ban_id: '8'
   ban_name: "\u6821\u957F\uFF0C\u522B\u518D\u90A3\u4E48\u7D2F"
-  image: https:\/\/crm.mp.image.lpcollege.com\/fwh\/official\/banner\/2019-10-24\/de88ac1caa5ede52023cae58a2f7ee54.jpg
+  image: https://crm.mp.image.lpcollege.com/fwh/official/banner/2019-10-24/de88ac1caa5ede52023cae58a2f7ee54.jpg
   is_show: 1
-  link: https:\/\/fuwuhao.lpcollege.com\/#\/courseDetails\/1502
+  link: https://fuwuhao.lpcollege.com/#/courseDetails/1502
   sort: '13'
-dependFieldRow_3:
-  course_class_id: 7
-  course_name: "\u6559\u57F9\u4E1A\u76C8\u5229\u9AD8\u589E\u957F\u8FD0\u8425\u6A21\
-    \u5F0F3.0"
-  course_name_id: 86
-  course_name_sn: ZA_01_03_01
-  hr_id: 2
-  is_auto_refund: 1
-  is_deposit: 0
-  is_refund_audit: 0
-  least_price: '980.00'
-  member_price: '2980.00'
-  meth_id: 2
-  price: '2980.00'
-  use_card_number: 1
 dependFieldRow_7:
   nicke_name: "\u6F02\u6773"
 dependFieldRow_9:

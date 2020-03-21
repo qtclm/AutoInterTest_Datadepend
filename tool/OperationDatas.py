@@ -141,7 +141,6 @@ class OperationExcle(object):
             columndata.append(cellvalue)
         return columndata
 
-
 class OperationJson(object):
     # 初始化文件
     def __init__(self, file_path=None):
@@ -150,7 +149,8 @@ class OperationJson(object):
             self.file_path = os.path.join(json_path,'Moudle_test.json')
         else:
             self.file_path = os.path.join(json_path,file_path)
-            
+
+        self.dict={}#存放需要的数据
         # self.data = self.read_data()
     
     def read_data(self):
@@ -174,6 +174,9 @@ class OperationJson(object):
     def write_data(self, data):
         with open(self.file_path, 'w') as fp:
             fp.write(demjson.encode(data))
+
+
+
         
 class OperationYaml(object):
     # pyyaml
@@ -288,9 +291,9 @@ class OperationYaml(object):
 
 
 if __name__ == '__main__':
-    # dict1 = {'crm_course_name':{"is_refund_audit":333,'this':100}}
-    opym=OperationYaml()#'dependFieldInfo.yaml'  #'dependKeyInfo.yaml'
-    print(opym.readDataForKey('config'))
+    dict1 = {'crm_course_name':{"is_refund_audit":333,'this':100}}
+    # opym=OperationYaml()#'dependFieldInfo.yaml'  #'dependKeyInfo.yaml'
+    # print(opym.readDataForKey('config'))
     # opx=OperationExcle()
     # # print(opx.get_cols_data(7))
     # print(opx.get_row_num(11))

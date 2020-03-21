@@ -29,7 +29,7 @@ if __name__=="__main__":
     # fwh=Mysql_test_fwh()
     # crm = Mysql_test_crm()
     tencent_cloud=Mysql_tencentcloud()
-    data=tencent_cloud.sql_operation('''select * from course_video''')
+    data=tencent_cloud.sql_operation_limit('''select  course_name_id from nc_course_name where course_class_id='7' and is_put=1''')
     print(data)
     # dev=Mysql_CorporateUniversity_dev()
     # test=Mysql_CorporateUniversity_test()

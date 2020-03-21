@@ -7,9 +7,11 @@ def write_dependField(row):
     if depend_case_id:
         depend = DependentData(depend_case_id)
         # 获取依赖key
-        Gd.get_depent_key(row)
+        depent_key=Gd.get_depent_key(row)
+        # print(depent_key)
         # 将依赖数据写入请求数据
         flag=depend.writeDependRequestDataToExcle(row)
+        # print(flag)
         return flag
     else:
         return False
@@ -26,8 +28,8 @@ def write_dependSql(row):
 def write_excle():
     Gd = GetData()
     row=Gd.get_case_line()
-    # for i in range(2,row+1):
-    for i in range(16,16+1):
+    for i in range(2,row+1):
+    # for i in range(7,7+1):
         caseid = Gd.get_caseId(i)
         if caseid:
             falg=write_dependField(i)

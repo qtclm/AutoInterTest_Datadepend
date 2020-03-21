@@ -1,31 +1,41 @@
- #配置信息
-Config_Try_Num:
-  1 #失败重试次数
-
-Dingtalk_access_token:
-   ""  #钉钉配置
-
-#依赖key关键字
-dependKey:
-  dependKeyRow_
-#依赖字段关键字
-dependField:
-  dependFieldRow_
-#sql执行结果关键字
-sqlExecuteResult:
-  SqlExecuteResultRow_
-
-#定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
-crm_headerFlag:
-  crm
-fwh_headerFlag:
-  fwhc
-fwh_admin_headerFlag:
-  fwh_admin
-No_auth_headerFlag:
-  notoken
-
 config:
+  #全局配置信息
+  Config_Try_Num:
+    1 #失败重试次数
+  Dingtalk_access_token:
+    ""  #钉钉配置
+  #依赖key关键字
+  dependKey:
+    dependKeyRow_
+  #依赖字段关键字
+  dependField:
+    dependFieldRow_
+  #sql执行结果关键字
+  sqlExecuteResult:
+    SqlExecuteResultRow_
+  #定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
+  crm_headerFlag:
+    crm
+  fwh_headerFlag:
+    fwhc
+  fwh_admin_headerFlag:
+    fwh_admin
+  No_auth_headerFlag:
+    notoken
+
+  #  服务号用户信息接口拼接符
+  fwh_user_dependKey_joinstr:
+    '$.data.'
+  #  服务号后台拼接符
+  fwhadmin_dependKey_joinstr:
+    '$.data[*].'
+  #  常规拼接符
+  rule_dependKey_joinstr:
+    '$.data.data[*].'
+  #递归拼接符
+  recursive_joinstr:
+    '$..'
+
    #crm相关
   database_test_addr: &database_test_addr
     47.112.126.72 #测试环境数据库配置

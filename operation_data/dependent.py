@@ -1,13 +1,8 @@
 import sys
-import json
-import os
 sys.path.append("../")
 from operation_data.get_data import GetData
-from tool.import_common import Tool
-from jsonpath_rw import jsonpath,parse
 from operation_data import data_config
 from tool.OperationDatas import OperationYaml,OperationExcle
-from tool.import_common import Tool
 import demjson
 #jsonpath_rw：接口自动化测试中，存在依赖情况：test_02的某个请求参数的值，需要依赖test_01返回结果中某个字段的数据，
 # 所以就先需要拿到返回数据中特定字段的值
@@ -30,28 +25,30 @@ class DependentData(GetData):
         request_data = self.data.requestData(row_num)
         header=self.data.headerData(row_num)
         method=self.data.get_request_method(row_num)
-        depend_response=self.run_method.run_main(method,url,request_data,header)
         self.log.info(self.mylog.out_varname(row_num))
         self.log.info(self.mylog.out_varname(url))
         self.log.info(self.mylog.out_varname(request_data))
         self.log.info(self.mylog.out_varname(header))
         self.log.info(self.mylog.out_varname(method))
-        self.log.info(self.mylog.out_varname(depend_response))
-        # 对服务号后台得请求做特殊判断
-        if method!='get' and self.yaml.readDataForKey('config')['fwh_admin_test_api'] in url:
-            response = self.run_method.run_main(method=method, url=url, data=request_data,headers=header, res_format='text')
-        else:
-            response = self.run_method.run_main(method=method, url=url, data=request_data,headers=header, res_format='json')
-        self.log.info(self.mylog.out_varname(response))
-        return response
+        try:
+            depend_response = self.run_method.run_main(method=method, url=url, data=request_data,headers=header, res_format='json')
+            self.log.info(self.mylog.out_varname(depend_response))
+            return depend_response
+        except Exception as error:
+            depend_response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
+                                                res_format='text')
+            self.log.info(self.mylog.out_varname(depend_response))
+            self.log.error(self.mylog.out_varname(error))
+     
+            return depend_response
 
     
     #根据依赖key去获取执行依赖测试case的响应，然后返回
     def get_data_for_key(self,row):
         self.depend_data_dict={}#执行前清空dict
         yamlDepentKey=self.data.get_depent_key(row)
+        # print(yamlDepentKey)
         depend_Field_dict={}#数据依赖字段
-        depend_key_dict=self.depend_key_dict
         # response_data为依赖测试的执行结果
         response_data = self.run_dependent()
         try:
@@ -62,45 +59,33 @@ class DependentData(GetData):
             if isinstance(yamlDepentKey, list) and yamlDepentKey:
                 for i in yamlDepentKey:
                     self.depend_data_parse(i,response_data)
-                    # print(self.depend_key_dict)
             else:
                 return None
         except SyntaxError as syntaxerror:
+            # print(syntaxerror)
             self.log.error(self.mylog.out_varname(syntaxerror))
             self.depend_data_parse(yamlDepentKey,response_data)
-            print(self.mylog.out_varname(syntaxerror))
         excleDepentKey=self.dependFiel_kw(row)
-        depend_Field_dict[excleDepentKey]=depend_key_dict
+        depend_Field_dict[excleDepentKey]=self.depend_key_dict
         return depend_Field_dict
         
-    def depend_data_parse(self,depent_key,response_data):
+    def depend_data_parse(self,depend_key,response_data):
         '''处理依赖'''
-        if depent_key:
+        if depend_key:
             # 定义要获取的key
-            json_exe = parse(depent_key)
-            # 定义响应数据,key从响应数据里获取
-            madle = json_exe.find(response_data)
-            depend_data_index = depent_key.rfind('.')
-            depend_data_str = depent_key[depend_data_index + 1:]
-            # math.value返回的是一个list，可以使用索引访问特定的值jsonpath_rw的作用就相当于从json里面提取响应的字段值
-            try:
-                math_value = [i.value for i in madle]
-                if math_value:
-                    math_value=math_value[0]
-                    self.depend_key_dict[depend_data_str] = math_value
-                # print(self.depend_key_dict)
-            except IndexError as indexerror:
-                self.log.error(self.mylog.out_varname(indexerror))
-                return None
-        else:
-            return None
+            # 处理依赖时，只取响应中的第一个值
+            __dict=self.data.requestDataDispose.depend_data_parse(depend_key,response_data,index='one')
+            # 合并字典
+            # 确保字典不能为空与类型必须时字典
+            if __dict and isinstance(__dict,dict):
+                self.depend_key_dict.update(__dict)
         
         
     # 返回数据依赖字段
     def dependFiel_kw(self, row):
         col = int(data_config.get_field_depend())
         depend_field = self.opera_excle.get_cell_value(row, col)
-        self.dependFieldYaml = '{}{}'.format(self.yaml.readDataForKey('dependField'),row)
+        self.dependFieldYaml = '{}{}'.format(self.yaml['dependField'],row)
         # print('self.data.writelist',self.data.writelist)
         if not depend_field:
             # 判断field关键字是否存在存实例中
@@ -126,7 +111,6 @@ class DependentData(GetData):
     # 写入数据依赖字段信息至yaml
     def write_dependField(self,row):
         try:
-            falg=None
             dependFieldYaml=self.get_data_for_key(row)
             if dependFieldYaml:
                 # '''这句代码用于处理yaml写入失败（浮点对象异常的问题）
@@ -136,6 +120,7 @@ class DependentData(GetData):
             else:
                 return False
         except BaseException as error:
+            print(error)
             self.log.error(self.mylog.out_varname(error))
             return False
         
@@ -156,7 +141,12 @@ class DependentData(GetData):
     
 if __name__=='__main__':
     dd=DependentData(1)
-    # key=dd.get_data_for_key(2)
+    depend_key={'course_name_id': 86}
+    v=dd.requestDataDispose.denpendKeyGenerate(depend_key, '$..')
+    response= {'code': 200, 'msg': '成功', 'data': {'current_page': 1, 'last_page': 1, 'per_page': 20, 'total': 6, 'data': [{'course_name_id': 188, 'course_name_sn': 'ZB_01_04_01', 'course_name': '抢跑“开学季”——朗培F4导师开学21天陪练营”', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '1980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1615, 'create_time': '2020-03-17 09:51:43', 'update_time': '2020-03-20 18:30:19', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '艾照友0025', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1615?is_need_share=1', 'card': []}, {'course_name_id': 184, 'course_name_sn': 'ZA010101', 'course_name': '校长，别再那么累--招生赢天下，管理定江山test', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2.00', 'member_price': '1.00', 'least_price': '1.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 13, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1568, 'create_time': '2019-12-21 09:46:54', 'update_time': '2020-03-07 15:04:12', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-民生银行高新支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1568?is_need_share=1', 'card': []}, {'course_name_id': 170, 'course_name_sn': 'ZA_01_01_02', 'course_name': '校长，别再那么累--招生赢天下，管理定江山', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2000.00', 'member_price': '1000.00', 'least_price': '100.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1562, 'create_time': '2019-08-06 17:50:00', 'update_time': '2020-01-14 16:14:30', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '孟飞', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1562?is_need_share=1', 'card': [{'study_card_type_id': '3', 'study_card_name': '孵化营9800'}]}, {'course_name_id': 2, 'course_name_sn': 'ZA_01_01_01', 'course_name': '校长，别再那么累2.0-打赢营销战', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '280.00', 'member_price': '280.00', 'least_price': '180.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1560, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-11 13:41:11', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': 'admin', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1560?is_need_share=1', 'card': []}, {'course_name_id': 86, 'course_name_sn': 'ZA_01_03_01', 'course_name': '教培业盈利高增长运营模式3.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2980.00', 'member_price': '2980.00', 'least_price': '980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 583, 'create_time': '2019-03-01 10:30:21', 'update_time': '2020-03-21 15:37:47', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/583?is_need_share=1', 'card': []}, {'course_name_id': 3, 'course_name_sn': 'ZA_01_02_01', 'course_name': '解放校长，管理不再累2.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '580.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 0, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 21, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-05 11:23:55', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '向鹏贤3755', 'share_url': 'https://front.lpcollege.com/#/courseDetails/21?is_need_share=1', 'card': []}]}}
+    value=dd.data.requestDataDispose.depend_data_parse(v[0],response,index='all')
+    print(value)
+    # # key=dd.get_data_for_key(2)
     # print(dd.write_dependField(3))
     # print(key)
     # value=dd.write_dependData_to_dependField(5)

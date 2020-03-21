@@ -23,10 +23,10 @@ class GetData(ToolALL):
         self.dependKeyYaml=''
         self.sqlExecuteResult=''
         # '''定义header类型'''
-        self.No_auth_headerFlag=self.yaml.readDataForKey('No_auth_headerFlag') #无需token认证
-        self.crm_headerFlag = self.yaml.readDataForKey('crm_headerFlag')# crm
-        self.fwh_headerFlag = self.yaml.readDataForKey('fwh_headerFlag') # 服务号微信端
-        self.fwh_admin_headerFlag = self.yaml.readDataForKey('fwh_admin_headerFlag') # 服务号后台
+        self.No_auth_headerFlag=self.yaml['No_auth_headerFlag'] #无需token认证
+        self.crm_headerFlag = self.yaml['crm_headerFlag']# crm
+        self.fwh_headerFlag = self.yaml['fwh_headerFlag'] # 服务号微信端
+        self.fwh_admin_headerFlag = self.yaml['fwh_admin_headerFlag'] # 服务号后台
         #存放sql
         self.sql=None
         self.writelist=[]
@@ -115,11 +115,12 @@ class GetData(ToolALL):
     def get_request_name(self, row):
         col = int(data_config.get_request_name())
         request_name = self.opera_excle.get_cell_value(row, col)
-        if request_name != '':
-            print('请求url:' + request_name)
+        if request_name:
+            # print('请求url:' + request_name)
+            return request_name
         else:
             return None
-        return request_name
+        
     
     # 获取请求方式
     @args_None
@@ -135,13 +136,13 @@ class GetData(ToolALL):
         url = self.opera_excle.get_cell_value(row, col)
         headerFlag=self.getHeaderType(row)
         if headerFlag==self.crm_headerFlag:
-            url=self.yaml.readDataForKey('config')['crm_test_api']+url
+            url=self.yaml['crm_test_api']+url
             # print(1,url)
         elif headerFlag==self.fwh_headerFlag:
-            url = self.yaml.readDataForKey('config')['fwh_test_api'] + url
+            url = self.yaml['fwh_test_api'] + url
             # print(2, url)
         elif headerFlag==self.fwh_admin_headerFlag:
-            url = self.yaml.readDataForKey('config')['fwh_admin_test_api'] + url
+            url = self.yaml['fwh_admin_test_api'] + url
             # print(3, url)
         else:
             url=url
@@ -195,16 +196,6 @@ class GetData(ToolALL):
         col = int(data_config.get_expect())
         expect = self.opera_excle.get_cell_value(row, col)
         # ''' 替换双引号为单引号，避免由于引号问题出现断言失败'''
-        expect_list=[]
-        for i in expect:
-            if i==' ':
-                i=''
-            elif i=="'":
-                i='"'
-            expect_list.append(i)
-        expect=''.join(expect_list)
-        expect=expect.replace('True','true')
-        expect=expect.replace('False','false')
         return expect
 
     # # 根据sql获取预期结果
@@ -320,7 +311,7 @@ class GetData(ToolALL):
         # 2.读取数据的方式改成不用实例，直接用实例方法
         col = int(data_config.get_key_depend())
         excleDepentKey = self.opera_excle.get_cell_value(row, col)
-        self.dependKeyYaml = '{}{}'.format(self.yaml.readDataForKey('dependKey'), row)
+        self.dependKeyYaml = '{}{}'.format(self.yaml['dependKey'], row)
         if not excleDepentKey:
             # '''通过yaml文件获取depend'''
             if self.dependKeyYaml in self.opera_excle.write_list:
@@ -348,17 +339,17 @@ class GetData(ToolALL):
     def write_dependKey(self,row):
         str_in=self.get_request_data(row)
         # 获取配置中的dependKey完成dependKey字符拼接
-        self.dependKey = '{}{}'.format(self.yaml.readDataForKey('dependKey'), row)
-        self.dependField = '{}{}'.format(self.yaml.readDataForKey('dependField'), row)
+        self.dependKey = '{}{}'.format(self.yaml['dependKey'], row)
+        self.dependField = '{}{}'.format(self.yaml['dependField'], row)
         headerFlag=self.getHeaderType(row)
         join_str=''#依赖key生成固定拼接字符串
         if headerFlag==self.fwh_admin_headerFlag:
-            join_str='$.data[*].'
-        # 特殊处理获取用户信息接口
-        elif (self.yaml.readDataForKey('config')['fwh_test_api']+'/index/user/info' in self.get_url(self.get_caseId(row)) ):
-            join_str='$.data.'
+            join_str=self.yaml['fwhadmin_dependKey_joinstr']
+        # 特殊处理服务号获取用户信息接口
+        elif (self.yaml['fwh_test_api']+'/index/user/info' in self.get_url(self.get_caseId(row)) ):
+            join_str=self.yaml['fwh_user_dependKey_joinstr']
         else:
-            join_str='$.data.data[*].'
+            join_str=self.yaml['rule_dependKey_joinstr']
         if str_in:
             dependKeyInfo=self.requestDataDispose.denpendKeyGenerate(str_in,join_str=join_str)
             if dependKeyInfo:
@@ -453,7 +444,7 @@ class GetData(ToolALL):
                 # 匹配出表名，并作为依赖key的一部分
                 table_name=table_str[len(kw_str):].strip()
                 # 获取sql执行关键字并组装
-                self.sqlExecuteResult='{}{}_{}'.format(self.yaml.readDataForKey('sqlExecuteResult'),row,table_name)
+                self.sqlExecuteResult='{}{}_{}'.format(self.yaml['sqlExecuteResult'],row,table_name)
                 self.log.info(self.mylog.out_varname(self.sqlExecuteResult))
                 SqlExecute_dict={}
                 # '''这句代码用于处理yaml写入失败（浮点对象异常的问题）
@@ -491,3 +482,5 @@ class GetData(ToolALL):
         
 if __name__ == '__main__':
     Gd = GetData()
+    for i in range(2,Gd.get_case_line()):
+        Gd.process_expect_data(i)
