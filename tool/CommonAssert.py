@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from tool.operation_logging import logs
 
 #判断字符串是否包含，判断字典是否相等
@@ -56,22 +58,24 @@ class CommonAssert(object):
         temp = False
         if isinstance(dict_one,dict) and isinstance(dict_two,dict):
             if dict_one and dict_two:
-                # 将字典key对应的value批量转换为字符串，避免转换为set时错误，因为set对象不能是可变类型
+                self.log.info('dict_one:{}'.format(dict_one))
+                self.log.info('dict_two:{}'.format(dict_two))
+                # 获取两个dict所有的key，用来比较
                 dict_one_k=[s for s in dict_one.keys()]
                 dict_two_k = [s for s in dict_two.keys()]
                 if dict_one_k==dict_two_k:
                     for i in dict_one_k:
+                        # 拿到两个字典key对应的value拿来比较
                         one_str=dict_one[i]
                         two_str=dict_two[i]
                         if isinstance(two_str,list):
-                            for _two in two_str:
-                                # 如果元素在list中，直接跳出循环
-                                if one_str==_two:
-                                    temp=True
-                                    break
-                                else:
-                                    temp=False
-                                    continue
+                            # 如果dcit的元素不在dict2中：直接判定失败，否则：标识true继续循环
+                            if  not (one_str in two_str):
+                                temp=False
+                                return temp
+                            else:
+                                temp=True
+                                continue
                         else:
                             if one_str==two_str:
                                temp=True
@@ -92,7 +96,10 @@ class CommonAssert(object):
 
         
 if __name__=="__main__":
-    cm=CommonUtil()
-    cm.is_equal_dict('122','kkkdkdk')
-    a = '1222as@@'
+    import json
+    cm=CommonAssert()
+    dict1={'course_name_id': 170, 'course_name': '校长，别再那么累--招生赢天下，管理定江山'}
+    dict2={'course_name_id': [188, 184, 170, 2, 86, 3], 'course_name': ['抢跑“开学季”——朗培F4导师开学21天陪练营”', '校长，别再那么累--招生赢天下，管理定江山test', '校长，别再那么累--招生赢天下，管理定江山', '校长，别再那么累2.0-打赢营销战', '教培业盈利高增长运营模式3.0', '解放校长，管理不再累2.0']}
+    falg=cm.is_equal_dict_sql_except(dict1,dict2)
+
 

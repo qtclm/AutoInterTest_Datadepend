@@ -92,6 +92,8 @@ class RunTest(GetData):
             else:
                 # 针对sql断言特殊处理
                 res_dict=self.dict_assert_res(expect,response)
+                print(expect)
+                print(res_dict)
                 __assert=self.com_assert.is_equal_dict_sql_except(expect,res_dict)
                 # print(__assert)
             # 调用字典判断方法处理断言
