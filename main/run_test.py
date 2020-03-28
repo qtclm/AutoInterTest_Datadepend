@@ -74,8 +74,6 @@ class RunTest(GetData):
                                                 res_format='text')
             return response
         
-
-    
     #处理断言
     def assert_control(self,row,expect,response):
         expect_flag=self.Determine_assert_type(response)
@@ -92,8 +90,8 @@ class RunTest(GetData):
             else:
                 # 针对sql断言特殊处理
                 res_dict=self.dict_assert_res(expect,response)
-                print(expect)
-                print(res_dict)
+                # print(expect)
+                # print(res_dict)
                 __assert=self.com_assert.is_equal_dict_sql_except(expect,res_dict)
                 # print(__assert)
             # 调用字典判断方法处理断言
@@ -111,8 +109,6 @@ class RunTest(GetData):
                     res_dict.update(res_result)
             return res_dict
         return False
-
-                
 
     
     def assert_result_write_excle(self,row,__assert):
@@ -147,8 +143,6 @@ class RunTest(GetData):
         else:
             expect_flag='dict'
         return expect_flag
-        
-            
         
                 
     # 发送邮件、生成测试报告

@@ -3,8 +3,7 @@ import requests
 import re
 import sys
 sys.path.append("../")
-import os
-from tool.get_token import Crm_token,Config
+from tool.get_token import Crm_token
 
 class fwh_admin_token(Crm_token):
     def __init__(self,name='fwh_admin_token.data'):

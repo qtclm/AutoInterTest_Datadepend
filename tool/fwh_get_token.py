@@ -1,8 +1,6 @@
 import requests
-import re
 import sys
 sys.path.append("../")
-import os
 from tool.get_token import Crm_token
 from tool.OperationRequestData import operationRequestData
 

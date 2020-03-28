@@ -4,7 +4,6 @@ import os
 import demjson
 import collections
 from tool.MergeAllTestCase import OperationDataCase
-
 from tool.operation_logging import logs
 # demjson:可以处理不规则的json字符串
 # 常用的两个方法， 一个是 encode， 一个是 decode
