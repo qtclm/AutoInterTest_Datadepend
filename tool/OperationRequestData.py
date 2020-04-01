@@ -8,7 +8,6 @@ sys.path.append('../')
 from tool.OperationDatas import OperationYaml
 from tool.operation_logging import logs
 from jsonpath_rw import parse
-# today=datetime.date.today() #获取当前日期
 today=datetime.datetime.now().strftime('%Y%m%d')#获取当前日期
 
 
@@ -19,16 +18,16 @@ class operationRequestData(object):
         self.log=logs()
         
     # 根据jsonpath提取数据
-    def depend_data_parse(self,depent_key,response_data,index='one'):
+    def depend_data_parse(self,depend_key,response_data,index='one'):
         __dict={}#存放字典
         '''处理依赖'''
-        if depent_key:
+        if depend_key:
             # 定义要获取的key
-            json_exe = parse(depent_key)
+            json_exe = parse(depend_key)
             # 定义响应数据,key从响应数据里获取
-            madle = json_exe.find(response_data)
-            depend_data_index = depent_key.rfind('.')
-            depend_data_str = depent_key[depend_data_index + 1:]
+            madle = json_exe.find(depend_key)
+            depend_data_index = depend_key.rfind('.')
+            depend_data_str = depend_key[depend_data_index + 1:]
             # math.value返回的是一个list，可以使用索引访问特定的值jsonpath_rw的作用就相当于从json里面提取响应的字段值
             try:
                 math_value = [i.value for i in madle]
