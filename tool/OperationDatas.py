@@ -12,7 +12,7 @@ from tool.operation_logging import logs
 
 class OperationExcle(object):
     def __init__(self, file_address=None):
-        self.dataCase_path='../dataCase/run'
+        self.dataCase_path = os.path.join(os.path.dirname(__file__),'../textCommon/run')
         if not os.path.exists(self.dataCase_path):
             print("执行合并所有case")
             OperationDataCase()
@@ -143,7 +143,7 @@ class OperationExcle(object):
 class OperationJson(object):
     # 初始化文件
     def __init__(self, file_path=None):
-        json_path='../config'
+        json_path = os.path.join(os.path.dirname(__file__), '../config')
         if file_path == None:
             self.file_path = os.path.join(json_path,'Moudle_test.json')
         else:
@@ -188,7 +188,7 @@ class OperationYaml(object):
         # 支持YAML 1.2最新版
     
     def __init__(self, file_path=None):
-        yaml_path = '../config'
+        yaml_path=os.path.join(os.path.dirname(__file__),'../config')
         if file_path == None:
             self.file_path = os.path.join(yaml_path, 'Config.yaml')
         else:
