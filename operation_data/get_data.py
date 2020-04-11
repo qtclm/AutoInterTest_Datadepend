@@ -179,7 +179,9 @@ class GetData(ToolALL):
         col = int(data_config.get_url())
         url = self.opera_excle.get_cell_value(row, col)
         headerFlag=self.getHeaderType(row)
-        if headerFlag==self.crm_headerFlag:
+        if 'http://' in  url[:8] or 'https://' in url[:8]:
+            url=url
+        elif headerFlag==self.crm_headerFlag:
             url=self.yaml['crm_test_api']+url
             # print(1,url)
         elif headerFlag==self.fwh_headerFlag:
