@@ -13,15 +13,6 @@ config:
   #sql执行结果关键字
   sqlExecuteResult:
     SqlExecuteResultRow_
-  #定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
-  crm_headerFlag:
-    crm
-  fwh_headerFlag:
-    fwhc
-  fwh_admin_headerFlag:
-    fwh_admin
-  No_auth_headerFlag:
-    notoken
 
   #  服务号用户信息接口拼接符
   fwh_user_dependKey_joinstr:
@@ -97,9 +88,47 @@ config:
     port: 6379
 
  #信息头
-  headers_form_urlencoded: {"Content-Type":"application/x-www-form-urlencoded"} #请求格式为字符串时使用crm，fwh普通请求均可使用
-  headers_json: {"Content-Type":"application/json"} #请求数据为json格式时使用
-  headers_text: {"Content-Type":"text/html"} #服务号微信端上传图片（头像）
-  headers_form_data: {"Content-Type":"multipart/form-data"} #请求数据为表单，crm上传文件（会务指南），服务号后台上传课程附件/图片
-  headers_xml_fwh_admin: {"x-requested-with":"XMLHttpRequest"} #服务号后台请求信息头
+  headers_form_urlencoded:
+    {"Content-Type":"application/x-www-form-urlencoded"} #请求格式为字符串时使用crm，fwh普通请求均可使用
+  headers_json:
+    {"Content-Type":"application/json"} #请求数据为json格式时使用
+  headers_text:
+    {"Content-Type":"text/html"} #服务号微信端上传图片（头像）
+  headers_form_data:
+    {"Content-Type":"multipart/form-data"} #请求数据为表单，crm上传文件（会务指南），服务号后台上传课程附件/图片
+  headers_xml:
+    {"x-requested-with":"XMLHttpRequest"} #服务号后台请求信息头
+
+#定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
+  crm_headerFlag:
+    crm
+  fwh_headerFlag:
+    fwhc
+  fwh_admin_headerFlag:
+    fwh_admin
+  No_auth_headerFlag:
+    notoken
+
+#  定义content_type，定义为list，照顾多种书写习惯
+  content_type_json:
+    - json
+    - application/json
+  content_type_form_urlencoded:
+    - form_urlencoded
+    - form-urlencoded
+    - x-www-form-urlencoded
+    - application/x-www-form-urlencoded
+  content_type_text:
+    - text
+    - html
+    - text-html
+    - text/html
+  content_type_form_data:
+    - form_data
+    - form-data
+    - multipart/form-data
+  content_type_xml:
+    - xml
+    - XMLHttpRequest
+
 

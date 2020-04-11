@@ -3,7 +3,6 @@ sys.path.append('../')
 from operation_data.get_data import GetData
 from operation_data.writeAllDependDatas import write_excle
 from tool.WriteTestReportToExcel import Write_testReport_excle
-import demjson
 
 class RunTest(GetData):
     # 实例化前完成所有的请求数据依赖处理
@@ -35,8 +34,6 @@ class RunTest(GetData):
                 response=self.request_info(i)
                 expect = self.data.expectData(i)  # 断言，也就i是预期结果
                 # '''处理断言'''
-                # response默认是dict类型，这里断言是字符串所以需要把dict转换为str
-                # self.assert_control(i,expect,response)
                 self.assert_control(i,expect,response)
                 self.log.info(self.mylog.out_varname(expect))
                 self.log.info(self.mylog.out_varname(response))
@@ -51,16 +48,12 @@ class RunTest(GetData):
         request_name=self.get_request_name(row)
         self.log.info(self.mylog.out_varname(request_name))
         url = self.data.get_url(row)
-        # print(row,url)
         self.log.info(self.mylog.out_varname(url))
         method = self.data.get_request_method(row)
-        # print(method)
         self.log.info(self.mylog.out_varname(method))
         request_data = self.data.requestData(row)
-        # print(request_data)
         self.log.info(self.mylog.out_varname(request_data))
         header = self.data.headerData(row)
-        # print(type(header))
         self.log.info(self.mylog.out_varname(header))
         try:
             response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
@@ -110,7 +103,7 @@ class RunTest(GetData):
             return res_dict
         return False
 
-    
+    # 将断言结果写入excle
     def assert_result_write_excle(self,row,__assert):
         # 判断失败次数是否小于等于配置失败重试次数
         errorNum = 0

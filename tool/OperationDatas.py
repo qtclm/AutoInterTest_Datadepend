@@ -12,7 +12,7 @@ from tool.operation_logging import logs
 
 class OperationExcle(object):
     def __init__(self, file_address=None):
-        self.dataCase_path = os.path.join(os.path.dirname(__file__),'../textCommon/run')
+        self.dataCase_path = os.path.join(os.path.dirname(__file__),'../dataCase/run')
         if not os.path.exists(self.dataCase_path):
             print("执行合并所有case")
             OperationDataCase()

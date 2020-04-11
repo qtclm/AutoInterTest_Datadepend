@@ -12,7 +12,26 @@ dependKeyRow_3:
 - $.data.data[*].use_card_number
 - $.data.data[*].is_auto_refund
 - $.data.data[*].is_refund_audit
+- $.data.data[*].course_broker_id
+- $.data.data[*].create_admin_id
+- $.data.data[*].current_daiding_course_id
+- $.data.data[*].is_auto_legacy
+- $.data.data[*].is_put
+- $.data.data[*].legacy_hours
+- $.data.data[*].org_id
+- $.data.data[*].perf_comp_id
+- $.data.data[*].update_admin_id
+- $.data.data[*].use_ticket_number
 dependKeyRow_5:
+- $.data.nicke_name
+- $.data.timestamp
+- $.data.sign
+dependKeyRow_7:
+- $.data.data[*].co_id
+- $.data.data[*].order_id
+- $.data.data[*].timestamp
+- $.data.data[*].sign
+dependKeyRow_9:
 - $.data[*].ban_name
 - $.data[*].link
 - $.data[*].sort
@@ -21,15 +40,8 @@ dependKeyRow_5:
 - $.data[*].image
 - $.data[*].__token__
 - $.data[*].ban_id
-dependKeyRow_7:
-- $.data.nicke_name
-- $.data.timestamp
-- $.data.sign
-dependKeyRow_9:
-- $.data.data[*].co_id
-- $.data.data[*].order_id
-- $.data.data[*].timestamp
-- $.data.data[*].sign
+- $.data[*].co_id
+- $.data[*].order_id
 dependKeyRow_11:
 - $.data.data[*].card_manage_id
 - $.data.data[*].keys[0]

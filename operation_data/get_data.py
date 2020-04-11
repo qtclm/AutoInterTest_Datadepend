@@ -27,6 +27,12 @@ class GetData(ToolALL):
         self.crm_headerFlag = self.yaml['crm_headerFlag']# crm
         self.fwh_headerFlag = self.yaml['fwh_headerFlag'] # 服务号微信端
         self.fwh_admin_headerFlag = self.yaml['fwh_admin_headerFlag'] # 服务号后台
+        # 定义content_type
+        self.content_type_json=self.yaml['content_type_json']
+        self.content_type_form_urlencoded=self.yaml['content_type_form_urlencoded']
+        self.content_type_text=self.yaml['content_type_text']
+        self.content_type_form_data=self.yaml['content_type_form_data']
+        self.content_type_xml=self.yaml['content_type_xml']
         #存放sql
         self.sql=None
         self.writelist=[]
@@ -72,43 +78,81 @@ class GetData(ToolALL):
     # 确定header类型
     def getHeaderType(self,row):
         header=self.getHeader(row)
+        header_OutputCase = self.requestDataDispose.strOutputCase(header)
         flag = None
-        if (header.lower() == self.No_auth_headerFlag.lower() or header.upper() == self.No_auth_headerFlag.upper()) or header == '':
+        if self.No_auth_headerFlag in header_OutputCase :
             flag=self.No_auth_headerFlag
             return flag
-        elif (header.lower() == self.crm_headerFlag.lower() or header.upper() == self.crm_headerFlag.upper()):
+        elif self.crm_headerFlag in header_OutputCase:
             flag = self.crm_headerFlag
             return flag
-        elif (header.lower() == self.fwh_headerFlag.lower() or header.upper() == self.fwh_headerFlag.upper()):
+        elif self.fwh_headerFlag in header_OutputCase:
             flag = self.fwh_headerFlag
             return flag
-        elif (header.lower() == self.fwh_admin_headerFlag.lower() or header.upper() == self.fwh_admin_headerFlag.upper()):
+        elif self.fwh_admin_headerFlag in header_OutputCase:
             flag = self.fwh_admin_headerFlag
             return flag
         else:
             flag = None
             return flag
-    
+
+    # 获取content_type的值
+    def getContentType(self,row):
+        col = int(data_config.get_content_type())
+        content_type = self.opera_excle.get_cell_value(row, col)
+        return content_type
+
+    def ContentTypeData(self,row):
+        content_type=self.getContentType(row)
+        content_type_OutputCase=self.requestDataDispose.strOutputCase(content_type)
+        header_content_type=None
+        # 请求数据格式为json时使用
+        if [i for i in self.content_type_json if i in content_type_OutputCase] :
+            header_content_type= self.yaml['headers_json']
+        # 请求数据格式为浏览器原生时使用
+        elif [i for i in self.content_type_form_urlencoded if i in content_type_OutputCase]:
+            header_content_type= self.yaml['headers_form_urlencoded']
+        # 请求数据格式为text时使用，响应一般返回html
+        elif [i for i in self.content_type_text if i in content_type_OutputCase]:
+            header_content_type= self.yaml['headers_text']
+        # 一般用于文件上传时使用
+        elif [i for i in self.content_type_form_data if i in content_type_OutputCase]:
+            header_content_type= self.yaml['headers_form_data']
+        # 请求数据格式为xml时使用
+        elif [i for i in self.content_type_xml if i in content_type_OutputCase]:
+            header_content_type= self.yaml['headers_xml']
+        else:
+            print("暂不支持的content_type")
+            header_content_type= None
+        self.log.info(self.mylog.out_varname(header_content_type))
+        return header_content_type
+
     @args_None
     # 输出header
     def headerData(self, row):
         header_flag=self.getHeaderType(row)
-        # print('header_flag',header_flag)
-        if header_flag==self.No_auth_headerFlag:  # 不需要token时得header
-            notoken_headers = data_config.get_header_no_token()
-            return notoken_headers
-        elif header_flag==self.crm_headerFlag:  # CRM header
-            crm_headers = data_config.get_crm_header()
-            return crm_headers
-        elif header_flag==self.fwh_headerFlag:  # 服务号header
-            fwhc_headers = data_config.get_fwh_header()
-            return fwhc_headers
-        elif header_flag==self.fwh_admin_headerFlag:  # 服务号后台header
-            fwh_admin_header = data_config.get_fwhadmin_header()
-            return fwh_admin_header
-        else:
-            self.log.error('error:header填写错误')
-            return None
+        header_content_type=self.ContentTypeData(row)
+        if header_content_type and isinstance(header_content_type,dict):
+            if header_flag==self.No_auth_headerFlag:  # 不需要token时得header
+                notoken_headers = data_config.get_header_no_auth()
+                header_content_type.update(notoken_headers)
+                return header_content_type
+            elif header_flag==self.crm_headerFlag:  # CRM header
+                crm_headers = data_config.get_crm_token()
+                header_content_type.update(crm_headers)
+                return header_content_type
+            elif header_flag==self.fwh_headerFlag:  # 服务号header
+                fwhc_headers = data_config.get_fwh_token()
+                header_content_type.update(fwhc_headers)
+                return header_content_type
+            elif header_flag==self.fwh_admin_headerFlag:  # 服务号后台header
+                fwh_admin_header = data_config.get_fwhadmin_cookie()
+                header_content_type.update(fwh_admin_header)
+                return header_content_type
+            else:
+                self.log.error('error:header填写错误')
+                return None
+        return None
 
     # 获取请求url名称
     @args_None
@@ -482,5 +526,6 @@ class GetData(ToolALL):
         
 if __name__ == '__main__':
     Gd = GetData()
-    for i in range(2,Gd.get_case_line()):
-        Gd.process_expect_data(i)
+    # for i in range(2,Gd.get_case_line()):
+    for i in range(2,3):
+        print(Gd.headerData(i))

@@ -77,17 +77,12 @@ class Crm_token(Config):
             # print(response_login_message)
 
     def writeTokenToFile(self,username=18883612485,password='112233'):#将token写入文件
-        token=[]
-        token_list=self.get_token(username,password)
-        token.append(token_list)
-        if len(token)==0:
-            token_list=self.get_token(username,password)
-            with open(self.file_name,'w') as token_file:
-                token_file.write(str(token))
-        else:
-            with open(self.file_name,'w') as token_file:
-                token_file.write(str(token))
-        return token
+        token_list = []
+        token = self.get_token(username, password)
+        token_list.append(token)
+        with open(self.file_name, 'w') as token_file:
+            token_file.write(str(token_list))
+        return token_list
 
     def loadTokenList(self,username=18883612485,password='112233'):#加载token
         try:

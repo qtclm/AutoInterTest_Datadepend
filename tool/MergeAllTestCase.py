@@ -80,9 +80,9 @@ class OperationDataCase(object):
                     else:
                         row_count += 1
                         row_datas.append(row_list)
-                        if row_list[6] and row!=1:
+                        if row_list[7] and row!=1:
                             # dependcaseid对应得行号：caseId最终得index-（最初得caseId-最初得dependCaseId)，还需在减一（因为caseId是从第二行才开始）
-                            dependCaseidrow=row_count-(row_list[0]-row_list[6])-1
+                            dependCaseidrow=row_count-(row_list[0]-row_list[7])-1
                             self.dependCaseidrow_List.append(dependCaseidrow)
                             self.caseidrow_List.append(row_count)
                         
@@ -113,7 +113,8 @@ class OperationDataCase(object):
             # 处理dependCaseId
             if index+1 in self.caseidrow_List:
                 caseId_index=self.caseidrow_List.index(index+1)
-                sheet.cell(row=index+1,column=7).value=self.dependCaseidrow_List[caseId_index]
+                # column对应dependCaseId对应的列
+                sheet.cell(row=index+1,column=8).value=self.dependCaseidrow_List[caseId_index]
                 # print(sheet.cell(row=index+1,column=7).value)
         new_book.save(self.new_file)
 

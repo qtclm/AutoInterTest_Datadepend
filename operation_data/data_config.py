@@ -12,18 +12,20 @@ class global_val:
     url=str(__initnum+3)
     run=str(__initnum+4)
     request_method=str(__initnum+5)
-    header=str(__initnum+6)
-    case_dapend=str(__initnum+7)
-    key_depend=str(__initnum+8)
-    field_depend=str(__initnum+9)
-    data=str(__initnum+10)
-    sql_statement=str(__initnum+11)
-    sql_execute_result=str(__initnum+12)
-    redis_statement=str(__initnum+13)
-    redis_execute_result=str(__initnum+14)
-    expect=str(__initnum+15)
-    result=str(__initnum+16)
+    header_type=str(__initnum+6)
+    content_type=str(__initnum+7)
+    case_dapend=str(__initnum+8)
+    key_depend=str(__initnum+9)
+    field_depend=str(__initnum+10)
+    data=str(__initnum+11)
+    sql_statement=str(__initnum+12)
+    sql_execute_result=str(__initnum+13)
+    redis_statement=str(__initnum+14)
+    redis_execute_result=str(__initnum+15)
+    expect=str(__initnum+16)
+    result=str(__initnum+17)
     #获取case_id及每列的数据
+
 
 #  获取caseId
 def get_case_id():
@@ -47,31 +49,39 @@ def get_request_method():
 
 # 获取header
 def get_header():
-    return global_val.header
+    return global_val.header_type
 
-#获取crmheader值
-def get_crm_header():
+# 获取content_type
+def get_content_type():
+    return global_val.content_type
+
+#获取crm token值,并返回header
+def get_crm_token():
     get_token=Crm_token()
     tokenValue=get_token.loadTokenList()[0]
-    header={"Content-Type": "application/x-www-form-urlencoded","token":tokenValue}
+    header={}
+    header['token']=tokenValue
     return header
 
-#获取fwhheader值
-def get_fwh_header():
+#获取fwh token值,并返回header
+def get_fwh_token():
     get_token=fwh_token()
     tokenValue=get_token.loadTokenList()[0]
-    header={"Content-Type": "application/x-www-form-urlencoded","token":tokenValue}
+    header = {}
+    header['token'] = tokenValue
     return header
 
-#获取fwhadminheader值
-def get_fwhadmin_header():
+#获取fwhadmin Cookie值,并返回header
+def get_fwhadmin_cookie():
     get_token=fwh_admin_token()
-    header=get_token.loadTokenList() 
+    cookieValue=get_token.loadTokenList()[0]
+    header = {}
+    header['Cookie'] = cookieValue
     return header
 
-#获取无token 认证header值
-def get_header_no_token():
-    header = {"Content-Type": "application/json"}
+#获取无token 认证header值,并返回header
+def get_header_no_auth():
+    header = {}
     return header
 
 # 获取用例依赖
