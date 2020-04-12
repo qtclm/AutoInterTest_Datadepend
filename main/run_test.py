@@ -40,12 +40,9 @@ class RunTest(GetData):
                 self.assert_control(i,expect,response)
                 self.log.info(self.mylog.out_varname(expect))
                 self.log.info(self.mylog.out_varname(response))
-                
             # else:
             #     contine_info='当前用例为第{}条，跳过,is_run={}'.format(i-1,is_run)
-            #     self.log.info(self.mylog.out_varname(contine_info))
-   
-
+            #     self.log.info(self.mylog.out_varname(contine_info)
         
     #处理断言
     def assert_control(self,row,expect,response):
@@ -67,8 +64,7 @@ class RunTest(GetData):
                 # print(res_dict)
                 __assert=self.com_assert.is_equal_dict_sql_except(expect,res_dict)
                 # print(__assert)
-            # 调用字典判断方法处理断言
-        
+
         self.assert_result_write_excle(row,__assert)
     
     # 根据sql执行结果生成对应的response数据，用于断言判断

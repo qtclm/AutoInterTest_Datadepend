@@ -1,11 +1,29 @@
-dependFieldRow_3: {}
+dependFieldRow_3:
+  course_broker_id: 1
+  course_class_id: 10
+  course_name: "\u6709\u4E49\u65B9\u667A\u6167\u7236\u6BCD\u5927\u5B66"
+  course_name_id: 195
+  course_name_sn: JB_04_02_01
+  current_daiding_course_id: 1629
+  hr_id: 2
+  is_auto_legacy: 0
+  is_auto_refund: 0
+  is_deposit: 1
+  is_put: 1
+  is_refund_audit: 0
+  least_price: '4900.00'
+  legacy_hours: 0
+  member_price: '4900.00'
+  meth_id: 2
+  org_id: 1
+  perf_comp_id: 0
+  price: '4900.00'
+  use_card_number: 1
+  use_ticket_number: 1
 dependFieldRow_5: {}
 dependFieldRow_7: {}
 dependFieldRow_9: {}
 dependFieldRow_11: {}
-dependFieldRow_13: {}
-dependFieldRow_15: {}
-dependFieldRow_16: {}
 dependFieldRow_14: {}
 dependFieldRow_17: {}
 dependFieldRow_18: {}

@@ -25,7 +25,7 @@ class operationRequestData(object):
             # 定义要获取的key
             json_exe = parse(depend_key)
             # 定义响应数据,key从响应数据里获取
-            madle = json_exe.find(depend_key)
+            madle = json_exe.find(response_data)
             depend_data_index = depend_key.rfind('.')
             depend_data_str = depend_key[depend_data_index + 1:]
             # math.value返回的是一个list，可以使用索引访问特定的值jsonpath_rw的作用就相当于从json里面提取响应的字段值
@@ -38,6 +38,7 @@ class operationRequestData(object):
                     __dict[depend_data_str]=math_value
                     return __dict
             except IndexError as indexerror:
+                # print(indexerror)
                 return None
         else:
             return None
@@ -100,20 +101,21 @@ class operationRequestData(object):
                     colon_str_index = i.find(match_str)
                 # '''去掉key、value的空格,key中的引号'''
                 str_in_key = i[:colon_str_index].strip()
-                str_in_key = str_in_key.replace('"','')
-                str_in_key = str_in_key.replace("'",'')
-                # 正则过滤无用key,只保留key第一位为字母数据获取[]_
-                str_sign = re.search('[^a-zA-Z0-9\_\[\]+]', str_in_key[0])
-                if str_sign is None:
-                    # 处理value中的空格与转义符
-                    str_in_value = i[colon_str_index + 1:].strip()
-                    str_in_value=str_in_value.replace('\\','')
-                    try:
-                        # 遇到是object类型的数据转换一下
-                        str_in_value=eval(str_in_value)
-                    except BaseException as error:
-                        str_in_value=str_in_value
-                    str_in_dict[str_in_key] = str_in_value
+                if str_in_key:
+                    str_in_key = str_in_key.replace('"','')
+                    str_in_key = str_in_key.replace("'",'')
+                    # 正则过滤无用key,只保留key第一位为字母数据获取[]_
+                    str_sign = re.search('[^a-zA-Z0-9\_\[\]+]', str_in_key[0])
+                    if str_sign is None:
+                        # 处理value中的空格与转义符
+                        str_in_value = i[colon_str_index + 1:].strip()
+                        str_in_value=str_in_value.replace('\\','')
+                        try:
+                            # 遇到是object类型的数据转换一下
+                            str_in_value=eval(str_in_value)
+                        except BaseException as error:
+                            str_in_value=str_in_value
+                        str_in_dict[str_in_key] = str_in_value
             return str_in_dict
         else:
             print("参数都没有，还处理个球嘛")
@@ -191,17 +193,13 @@ class operationRequestData(object):
             # '''完成参数替换'''
             str_in_dict.update(denpend_filed)
             return str_in_dict
+        return None
     
     # 将替换完成的请求数据，转换为str并输出
     def requestDataDepend(self, denpend_filed,str_in,space_one=':',space_two='\n'):
         '''数据依赖请求专用，输入依赖字段信息，输出处理完成的字符串'''
         str_dict = self.denpendFiledToRequestData(denpend_filed, str_in)
-        str_out = ''
-        for k, v in str_dict.items():
-            str_out += '{}{}{}{}'.format(k,space_one,v,space_two)
-        if str_out[-1] == space_two:
-            str_out=str_out[:-1]
-        # print(self.log.out_varname(str_out))
+        str_out = self.dictToStr(str_dict,space_one,space_two)
         return str_out
 
     # '''常规字符处理，用于处理chrome复制出来的表单数据，输出k1=v1&k2=v2... '''
@@ -253,78 +251,32 @@ class operationRequestData(object):
             return requests_dict
 
     # ''' 一个用于指定输出的方法，一般不使用'''
-    def requestDataCustom(self,str_in,str_custom='=>'):
-        try:
-            str_colon=re.search('\s*:\W?',str_in).group() #匹配出字符串中所有的冒号
-            str_tihuan='"'+str_custom+'"'
-            str_equal=re.sub(str_colon,str_tihuan,str_in) #将字符串中的冒号替换为目标符号即定义的str_custom的值
-            str_lin=re.search("(\s\n*){2,}|(\s\n*)",str_equal).group() #匹配出字符串中所有的换行符与空格,不写表示不限定匹配次数
-            str_give=re.sub(str_lin,'"'+str_lin+'"',str_equal) #将字符串中的换行符替换为& (\n >>> &)
-            str_lin2=re.search('^',str_give).group() #匹配字符串开头
-            str_give2=re.sub('^','"'+str_lin2,str_give) #替换结果为'"'+匹配结果加
-            str_lin3=re.search('$',str_give2).group() #匹配字符串末尾
-            str_give3=re.sub('$',str_lin3+'"',str_give2)#替换结果为匹配结果加+'"'
-            return str_give.encode() #返回字符串，并对数据进行编码处理
-        except Exception as error:
-            print("数据处理失败，原因为:\n%s"%(error))
+    def requestDataCustom(self,str_in,str_custom='=>',space_two='\n'):
+        str_dict = self.strToDict(str_in)
+        str_out = self.dictToStr(str_dict, space_one=str_custom,space_two=space_two)
+        return str_out
 
     # ''' 一个用于指定输出的postman的方法，去除空格'''
-    def requestDataTostr_postman(self,str_in,space_one=':'):
-        try:
-            str_colon=re.search('\s*:\W*',str_in).group() #匹配出字符串中所有的冒号与空格
-            str_equal=re.sub(str_colon,space_one,str_in) #将字符串中的冒号替换为目标符号即定义的str_custom的值
-            str_lin=re.search("(\s\n*){2,}|(\s\n*)",str_equal).group() #匹配出字符串中所有的换行符与空格,不写表示不限定匹配次数
-            str_give=re.sub(str_lin,'\n',str_equal)
-            print(str_give)
-        except Exception as error:
-            print("数据处理失败，原因为:\n%s"%(error))
+    def requestDataTostr_postman(self,str_in,space_one=':',space_two='\n'):
+        str_dict=self.strToDict(str_in)
+        str_out=self.dictToStr(str_dict,space_one=space_one,space_two=space_two)
+        return str_out
 
     # '''批量生成数组格式的数据'''
-    def createBatchData(self,str_in,list_in): #创建批量审核的格式数据
-        list2=[]#用于存放替换后的数据
-        try:
-            str_in_list=str_in.split('\n')
-            str_out_list=[]
-            for str_tab in str_in_list :
-                search_str_tab=re.search('\s',str_tab)
-                # '''匹配字符串所有得空白字符，包含（\t\n\r\s等）,并处理'''
-                if search_str_tab:
-                    search_str_tab=search_str_tab.group()
-                    str_tab=re.sub(search_str_tab,'',str_tab)
-                str_out_list.append(str_tab)
-            out_str='\n'.join(str_out_list)
-            batchAudit=out_str.find('\n')
-            for a in list_in:
-                str_Batch=out_str[:batchAudit]#匹配出第一行数据
-                find_str=str_Batch.rfind(' ')#匹配出结果空格所处下标
-                if find_str==-1:
-                    find_str=str_Batch.rfind(':')
-                Batch_value_source=str_Batch[find_str:] #取出value值
-                Batch_value_now=Batch_value_source.replace(str(Batch_value_source),str(a)) #替换value值为list里面的数据
-                str_pinjie_first=str_Batch[:find_str+1]+Batch_value_now #字符拼接
-                find_str2=str_pinjie_first.find(':') #匹配出结果冒号所处下标
-                Batch_key=str_pinjie_first[:find_str2] #取出冒号左边的值
-                Batch_key_brackets_source=re.search('(\W\d+\W)',Batch_key)
-                if Batch_key_brackets_source:
-                    Batch_key_brackets_source=Batch_key_brackets_source.group()#匹配出[0]
-                else:
-                    print('请求参数中不包含list')
-                    return None
-                Batch_key_brackets_now=re.sub(Batch_key_brackets_source,str(list_in.index(a)),Batch_key)#替换[0]为list对应的下标
-                str_pinjie_second=Batch_key_brackets_now+str_pinjie_first[find_str2:] #字符拼接
-                list2.append(str_pinjie_second) #将替换好的数据添加至list2
-            list_to_str='\n'.join(list2) #将list2转换为字符串，并以换行符间隔
-            if batchAudit==-1:#返回-1则代表没有匹配到数值，代表当前字符串不存在换行，即只有一行
-                last_replace = re.sub(str_Batch, '', list_to_str)  # 最后用正则完成替换
-            else:
-                last_replace = out_str.replace(str_Batch, list_to_str)  # 最后替换字符串
-            if not ( 'sign' in out_str):#如果传入字符串不包含‘sign’,调用正常处理字符串的方法
-                str_give=self.requestDataGeneral(last_replace) #调用字符转换方法进行请求数据处理
-            else:#如果传入字符串包含‘sign’,调用特殊服务号处理字符串的方法
-                str_give=self.requestDatafwh(last_replace)
-            return str_give
-        except Exception as error:
-            print("数据处理失败，原因为:\n%s"%(error))
+    def createBatchData(self, str_in, list_in):
+        str_dict=self.strToDict(str_in)
+        array_str='[0]'
+        array_list=[i for i in str_dict.keys() if array_str in i]
+        if array_list:
+            array_key=array_list[0]
+        else:
+            return None
+        for index,value in enumerate(list_in):
+            _dict_key='{}{}{}'.format(array_key[:-2],index,array_key[-1])
+            str_dict[_dict_key]=value
+        out_str=self.dictToStr(str_dict)
+        return out_str.encode()
+
 
     def time_to_str(self,timeOrTimeStr=0):#时间戳转换为字符串
         try:
@@ -512,10 +464,19 @@ class operationRequestData(object):
 
 if __name__=="__main__":
     request_data_to_str=operationRequestData()
-    depend_key = {'course_name_id': 86}
-    v=request_data_to_str.denpendKeyGenerate(depend_key, '$..')
-    # print(v[0])
-    response= {'code': 200, 'msg': '成功', 'data': {'current_page': 1, 'last_page': 1, 'per_page': 20, 'total': 6, 'data': [{'course_name_id': 188, 'course_name_sn': 'ZB_01_04_01', 'course_name': '抢跑“开学季”——朗培F4导师开学21天陪练营”', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '1980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1615, 'create_time': '2020-03-17 09:51:43', 'update_time': '2020-03-20 18:30:19', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '艾照友0025', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1615?is_need_share=1', 'card': []}, {'course_name_id': 184, 'course_name_sn': 'ZA010101', 'course_name': '校长，别再那么累--招生赢天下，管理定江山test', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2.00', 'member_price': '1.00', 'least_price': '1.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 13, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1568, 'create_time': '2019-12-21 09:46:54', 'update_time': '2020-03-07 15:04:12', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-民生银行高新支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1568?is_need_share=1', 'card': []}, {'course_name_id': 170, 'course_name_sn': 'ZA_01_01_02', 'course_name': '校长，别再那么累--招生赢天下，管理定江山', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2000.00', 'member_price': '1000.00', 'least_price': '100.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1562, 'create_time': '2019-08-06 17:50:00', 'update_time': '2020-01-14 16:14:30', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '孟飞', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1562?is_need_share=1', 'card': [{'study_card_type_id': '3', 'study_card_name': '孵化营9800'}]}, {'course_name_id': 2, 'course_name_sn': 'ZA_01_01_01', 'course_name': '校长，别再那么累2.0-打赢营销战', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '280.00', 'member_price': '280.00', 'least_price': '180.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1560, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-11 13:41:11', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': 'admin', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1560?is_need_share=1', 'card': []}, {'course_name_id': 86, 'course_name_sn': 'ZA_01_03_01', 'course_name': '教培业盈利高增长运营模式3.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2980.00', 'member_price': '2980.00', 'least_price': '980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 583, 'create_time': '2019-03-01 10:30:21', 'update_time': '2020-03-21 15:37:47', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/583?is_need_share=1', 'card': []}, {'course_name_id': 3, 'course_name_sn': 'ZA_01_02_01', 'course_name': '解放校长，管理不再累2.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '580.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 0, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 21, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-05 11:23:55', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '向鹏贤3755', 'share_url': 'https://front.lpcollege.com/#/courseDetails/21?is_need_share=1', 'card': []}]}}
-    str1='json'
     tuple1=('file', 'C:\\Users\\Acer\\Pictures\\Screenshots\\10086.png')
-    print(request_data_to_str.out_join_files(tuple1))
+    # print(request_data_to_str.out_join_files(tuple1))
+    # jsonpath='$.data.data[*].course_name_id'
+    str_in='''page: 1
+limit: 10
+uid: 
+keywords: 
+start_date: 
+end_date: '''
+    str_batch='''course_finance_id[0]: 275365
+course_finance_id[1]: 275364
+total_price: 9800
+state: 1'''
+    list_in=[1,2,3,4,5,6]
+    print(request_data_to_str.createBatchData(str_batch,list_in))
+

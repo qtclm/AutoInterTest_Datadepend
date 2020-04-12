@@ -529,16 +529,16 @@ class GetData(ToolALL):
                 # 匹配出表名，并作为依赖key的一部分
                 table_name=table_str[len(kw_str):].strip()
                 # 获取sql执行关键字并组装
-                self.sqlExecuteResult='{}{}_{}'.format(self.yaml['sqlExecuteResult'],row,table_name)
-                self.log.info(self.mylog.out_varname(self.sqlExecuteResult))
+                sqlExecuteResult='{}{}_{}'.format(self.yaml['sqlExecuteResult'],row,table_name)
+                self.log.info(self.mylog.out_varname(sqlExecuteResult))
                 SqlExecute_dict={}
                 # '''这句代码用于处理yaml写入失败（浮点对象异常的问题）
                 value = eval(demjson.encode(sql_value))
-                SqlExecute_dict[self.sqlExecuteResult]=value
+                SqlExecute_dict[sqlExecuteResult]=value
                 # '''写入数据至excle与yaml'''
                 # self.opera_excle.writeDatasObject(self.sqlExecuteResult)
                 self.yamlsqlExecute.write_yaml(SqlExecute_dict)
-                self.opera_excle.write_value(row,col,self.sqlExecuteResult)
+                self.opera_excle.write_value(row,col,sqlExecuteResult)
                 # 保存
                 self.opera_excle.save_workbook()
                 return True

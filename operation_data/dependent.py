@@ -23,6 +23,8 @@ class DependentData(GetData):
         row_num=self.opera_excle.get_row_num(self.case_id)
         depend_response=self.data.request_info(row_num)
         self.log.info(self.mylog.out_varname(depend_response))
+        return depend_response
+
 
     #根据依赖key去获取执行依赖测试case的响应，然后返回
     def get_data_for_key(self,row):
@@ -32,6 +34,7 @@ class DependentData(GetData):
         depend_Field_dict={}#数据依赖字段
         # response_data为依赖测试的执行结果
         response_data = self.run_dependent()
+        # print(response_data)
         try:
             # ''' 判断depend_data使用eval是否发生异常，如果异常当做单字符处理，
             # 如果没异常判断是否是list且是否为空，满足条件循环处理，否则不处理'''
@@ -39,15 +42,18 @@ class DependentData(GetData):
                 response_data=eval(response_data)
             if isinstance(yamlDepentKey, list) and yamlDepentKey:
                 for i in yamlDepentKey:
+                    # print(i)
+                    # print(self.depend_key_dict)
                     self.depend_data_parse(i,response_data)
             else:
                 return None
         except SyntaxError as syntaxerror:
-            # print(syntaxerror)
+            print(syntaxerror)
             self.log.error(self.mylog.out_varname(syntaxerror))
             self.depend_data_parse(yamlDepentKey,response_data)
         excleDepentKey=self.dependFiel_kw(row)
         depend_Field_dict[excleDepentKey]=self.depend_key_dict
+        # print(self.depend_key_dict)
         return depend_Field_dict
         
     def depend_data_parse(self,depend_key,response_data):
@@ -96,6 +102,7 @@ class DependentData(GetData):
             if dependFieldYaml:
                 # '''这句代码用于处理yaml写入失败（浮点对象异常的问题）
                 value = eval(demjson.encode(dependFieldYaml))
+                # print(value)
                 self.yamlField.write_yaml(value)
                 return True
             else:
@@ -108,7 +115,7 @@ class DependentData(GetData):
     # 将依赖处理完毕的请求数据写入excle
     def writeDependRequestDataToExcle(self,row):
         source_data=self.get_depend_field(row)
-        # print(self.mylog.out_varname(source_data))
+        print(self.mylog.out_varname(source_data))
         falg=None
         if source_data:
             falg=self.data.writeDependFiledToRequestData(row,source_data=source_data)

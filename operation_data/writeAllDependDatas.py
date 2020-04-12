@@ -28,12 +28,12 @@ def write_dependSql(row):
 def write_excle():
     Gd = GetData()
     row=Gd.get_case_line()
-    for i in range(2,row+1):
-    # for i in range(7,7+1):
+    # for i in range(2,row+1):
+    for i in range(3,3+1):
         caseid = Gd.get_caseId(i)
         if caseid:
             falg=write_dependField(i)
-            # print(falg)
+            print(falg)
             if not falg:
                 write_dependSql(i)
         
