@@ -167,8 +167,7 @@ class GetData(ToolALL):
             return request_name
         else:
             return None
-        
-    
+
     # 获取请求方式
     @args_None
     def get_request_method(self, row):
@@ -271,7 +270,6 @@ class GetData(ToolALL):
         if files:
             response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
                                                 files=files,res_format='json')
-            self.log.info(self.mylog.out_varname(response))
         else:
             response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
                                                 res_format='json')
