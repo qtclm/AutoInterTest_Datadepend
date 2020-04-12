@@ -21,28 +21,9 @@ class DependentData(GetData):
     #执行依赖测试，并返回结果
     def run_dependent(self):
         row_num=self.opera_excle.get_row_num(self.case_id)
-        url = self.data.get_url(row_num)
-        request_data = self.data.requestData(row_num)
-        header=self.data.headerData(row_num)
-        method=self.data.get_request_method(row_num)
-        self.log.info(self.mylog.out_varname(row_num))
-        self.log.info(self.mylog.out_varname(url))
-        self.log.info(self.mylog.out_varname(request_data))
-        self.log.info(self.mylog.out_varname(header))
-        self.log.info(self.mylog.out_varname(method))
-        try:
-            depend_response = self.run_method.run_main(method=method, url=url, data=request_data,headers=header, res_format='json')
-            self.log.info(self.mylog.out_varname(depend_response))
-            return depend_response
-        except Exception as error:
-            depend_response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
-                                                res_format='text')
-            self.log.info(self.mylog.out_varname(depend_response))
-            self.log.error(self.mylog.out_varname(error))
-     
-            return depend_response
+        depend_response=self.data.request_info(row_num)
+        self.log.info(self.mylog.out_varname(depend_response))
 
-    
     #根据依赖key去获取执行依赖测试case的响应，然后返回
     def get_data_for_key(self,row):
         self.depend_data_dict={}#执行前清空dict

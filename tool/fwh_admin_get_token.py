@@ -74,7 +74,7 @@ class fwh_admin_token(Crm_token):
                     return headers_xml_fwh_admin
             except BaseException as error:
                 self.log.error(self.mylog.out_varname(error))
-                print('登录错误，token获取失败，\n错误信息：%s' % (error))
+                print('登录错误，sessionId获取失败，\n错误信息：%s' % (error))
         else:
             self.log.info(self.mylog.out_varname(response_login_message))
 
@@ -116,9 +116,9 @@ class fwh_admin_token(Crm_token):
 if __name__=="__main__":
     tk=fwh_admin_token()
     tel=18883612485
-    # for a in range(tel,tel+1):
-    #   print(tk.get_token(a,'112233'))
+    for a in range(tel,tel+1):
+      print(tk.get_token(a,'112233'))
     # tk.writeTokenToFile()
-    print(tk.loadTokenList())
+    # print(tk.loadTokenList())
 
         

@@ -59,15 +59,15 @@ class fwh_token(Crm_token):
 			return file_token_list
 		except Exception as error: #当文件不存在时,对异常异常进行捕获
 			self.log.error(self.mylog.out_varname(error))
-			# print('异常信息:%s'%(error))
+			print('异常信息:%s'%(error))
 
 
 if __name__=="__main__":
 	tk=fwh_token()
 	tel_list=[18888888888,13550314521,15651079241,13330005359,15962883801,15850564627,18815530362,15827474399,15240248892,15996200807,15996348047,13476185839,15855105403,15895018953,18912963593,18895399631,13270898768,18856163660,18251885334,13921431841,17798521120,15261831529]
 	# print(tk.get_token(18772937709))
-	tk.get_token()
-	# tk.loadTokenList()
+	# tk.get_token()
+	tk.loadTokenList()
 	# tk.writeTokenToFile()
 	# for a in tel_list :
 	# 	print("token:",tk.get_token(a))

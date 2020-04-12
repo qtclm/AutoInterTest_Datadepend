@@ -21,11 +21,18 @@ class CommonAssert(object):
             if not (isinstance(str_one,str) and isinstance(str_two,str)):
                 str_one=str(str_one)
                 str_two=str(str_two)
+            # 手动忽略空格与单双引号
+            str_one=str_one.replace(' ', '')
+            str_two=str_two.replace(' ', '')
+            str_one=str_one.replace("'", '"')
+            str_two=str_two.replace("'", '"')
             if str_one in str_two :
                 flag=True
             else:
                 flag=False
             self.log.info('flag:{}'.format(flag))
+            self.log.info('dict_one:{}'.format(str_one))
+            self.log.info('dict_two:{}'.format(str_two))
             return flag
         else:
             return False

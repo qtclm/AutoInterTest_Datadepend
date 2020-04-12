@@ -12,16 +12,6 @@ dependKeyRow_3:
 - $.data.data[*].use_card_number
 - $.data.data[*].is_auto_refund
 - $.data.data[*].is_refund_audit
-- $.data.data[*].course_broker_id
-- $.data.data[*].create_admin_id
-- $.data.data[*].current_daiding_course_id
-- $.data.data[*].is_auto_legacy
-- $.data.data[*].is_put
-- $.data.data[*].legacy_hours
-- $.data.data[*].org_id
-- $.data.data[*].perf_comp_id
-- $.data.data[*].update_admin_id
-- $.data.data[*].use_ticket_number
 dependKeyRow_5:
 - $.data.nicke_name
 - $.data.timestamp
@@ -40,8 +30,6 @@ dependKeyRow_9:
 - $.data[*].image
 - $.data[*].__token__
 - $.data[*].ban_id
-- $.data[*].co_id
-- $.data[*].order_id
 dependKeyRow_11:
 - $.data.data[*].card_manage_id
 - $.data.data[*].keys[0]
@@ -72,3 +60,28 @@ dependKeyRow_16:
 - $.data[*].keywords
 - $.data[*].startDate
 - $.data[*].endDate
+dependKeyRow_14:
+- $.data.sc_code_id
+- $.data.timestamp
+- $.data.sign
+dependKeyRow_17:
+- $.data[*].name
+- $.data[*].auth[0]
+- $.data[*].auth[2]
+- $.data[*].__token__
+- $.data[*].id
+dependKeyRow_18:
+- $.data[*].page
+- $.data[*].limit
+- $.data[*].keywords
+- $.data[*].startDate
+- $.data[*].endDate
+dependKeyRow_20:
+- $.data[*].ban_name
+- $.data[*].link
+- $.data[*].sort
+- $.data[*].is_show
+- $.data[*].file
+- $.data[*].image
+- $.data[*].__token__
+- $.data[*].ban_id

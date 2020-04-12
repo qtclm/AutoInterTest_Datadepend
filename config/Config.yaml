@@ -39,6 +39,9 @@ config:
     http://47.112.126.72:8081
   crm_front_addr: &crm_front_addr
     http://47.112.126.72:8083/
+#  crm图片储存域名
+  crm_image_addr:
+    https://crm.mp.image.lpcollege.com
   fwhadmin_front_addr: &fwhadmin_front_addr
     https://fwh.lpcollege.com/admin.php/system/publics/index.html
   fwh_readAndWriteSeparation: &fwh_readAndWriteSeparation
@@ -95,11 +98,12 @@ config:
   headers_text:
     {"Content-Type":"text/html"} #服务号微信端上传图片（头像）
   headers_form_data:
-    {"Content-Type":"multipart/form-data"} #请求数据为表单，crm上传文件（会务指南），服务号后台上传课程附件/图片
+    {"Content-Type":"multipart/form-data"} #请求数据为表单，不带参数
+  headers_form_data_boundary:
+    {} #请求数据为文件上传且有附加参数得情况，headers直接传空字典
   headers_xml:
     {"x-requested-with":"XMLHttpRequest"} #服务号后台请求信息头
-
-#定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
+  #定义各个系统以及无需授权认证得header标识用于处理请求数据、header、sql查询判断等
   crm_headerFlag:
     crm
   fwh_headerFlag:
@@ -127,8 +131,12 @@ config:
     - form_data
     - form-data
     - multipart/form-data
+  content_type_form_data_boundary:
+    - form_data_boundary
+    - form-data-boundary
+    - multipart/form-data; boundary
+    - multipart/form-data;boundary
   content_type_xml:
     - xml
     - XMLHttpRequest
-
 

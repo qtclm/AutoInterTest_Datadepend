@@ -32,6 +32,7 @@ class GetData(ToolALL):
         self.content_type_form_urlencoded=self.yaml['content_type_form_urlencoded']
         self.content_type_text=self.yaml['content_type_text']
         self.content_type_form_data=self.yaml['content_type_form_data']
+        self.content_type_form_data_boundary=self.yaml['content_type_form_data_boundary']
         self.content_type_xml=self.yaml['content_type_xml']
         #存放sql
         self.sql=None
@@ -72,8 +73,7 @@ class GetData(ToolALL):
         col = int(data_config.get_header())
         header = self.opera_excle.get_cell_value(row, col)
         return header
-    
-   
+
     @args_None
     # 确定header类型
     def getHeaderType(self,row):
@@ -115,7 +115,10 @@ class GetData(ToolALL):
         # 请求数据格式为text时使用，响应一般返回html
         elif [i for i in self.content_type_text if i in content_type_OutputCase]:
             header_content_type= self.yaml['headers_text']
-        # 一般用于文件上传时使用
+        # 用于文件上传时与文件上传时有附加参数时使用,header为空
+        elif [i for i in self.content_type_form_data_boundary if i in content_type_OutputCase]:
+            header_content_type = self.yaml['headers_form_data_boundary']
+        # 用于form-data表单提交时使用
         elif [i for i in self.content_type_form_data if i in content_type_OutputCase]:
             header_content_type= self.yaml['headers_form_data']
         # 请求数据格式为xml时使用
@@ -132,7 +135,7 @@ class GetData(ToolALL):
     def headerData(self, row):
         header_flag=self.getHeaderType(row)
         header_content_type=self.ContentTypeData(row)
-        if header_content_type and isinstance(header_content_type,dict):
+        if  isinstance(header_content_type,dict):
             if header_flag==self.No_auth_headerFlag:  # 不需要token时得header
                 notoken_headers = data_config.get_header_no_auth()
                 header_content_type.update(notoken_headers)
@@ -202,26 +205,19 @@ class GetData(ToolALL):
         request_data = self.opera_excle.get_cell_value(row, col)
         return request_data
     
-    # 更改请求数据类型
+    # 更改请求数据类型,并输出最终得请求数据
     @args_None
     def requestData(self, row):
         '''根据每一行的内容中的header值来判断是哪个系统的接口并使用特定的方法完成对请求数据的处理'''
         header_flag=self.getHeaderType(row)
         request_data = self.get_request_data(row)
         try:
-            if header_flag==self.crm_headerFlag or \
-                    header_flag==self.fwh_admin_headerFlag:  # 处理crm接口处理
+            if header_flag in [self.crm_headerFlag,self.fwh_admin_headerFlag,self.fwh_headerFlag]:  # 处理crm接口处理
                 if request_data:  # 请求参数不为空
-                    crm_request_data = self.requestDataDispose.requestDataGeneral(request_data)
-                    return crm_request_data
+                    _request_data = self.requestDataDispose.requestToDict(request_data)
+                    return _request_data
                 else:
-                    return request_data
-            elif header_flag==self.fwh_headerFlag:  # 处理服务号微信端请求数据
-                if request_data:  # 请求参数不为空
-                    fwh_request_data = self.requestDataDispose.requestDatafwh(request_data)
-                    return fwh_request_data
-                else:
-                    return request_data
+                    return None
             else:  # 其余情况当做json格式处理
                 json_data = demjson.encode(request_data)
                 return json_data
@@ -229,13 +225,58 @@ class GetData(ToolALL):
             self.log.error(self.mylog.out_varname(indexError))
             # print(indexError)
             return None
-    
-    # #通过获取关键字拿到data数据
-    # def get_data_for_json(self,row):
-    #     opear_json=OperationJson()
-    #     request_data=opear_json.get_data(self.get_request_data(row))
-    #     return request_data
-    
+
+    def get_joinFiles(self,row):
+        col = int(data_config.get_joinFiles())
+        joinFiles = self.opera_excle.get_cell_value(row, col)
+        # ''' 替换双引号为单引号，避免由于引号问题出现断言失败'''
+        return joinFiles
+
+    # 获取关联得文件信息
+    def joinFilesData(self,row):
+        joinFiles=self.get_joinFiles(row)
+        # print(eval(joinFiles))
+        if not joinFiles:
+            return None
+        if joinFiles[0] in ('(','[','{') and joinFiles[-1] in(')',']','}') :
+            try:
+                joinFileData=self.requestDataDispose.out_join_files(tuple_in=eval(joinFiles))
+                # print(joinFileData)
+                if joinFileData:
+                    return joinFileData
+                else:
+                    return None
+            except BaseException as e:
+                print(e)
+                return None
+        else:
+            return None
+
+    # 处理请求
+    def request_info(self,row):
+        response = None
+        request_name=self.get_request_name(row)
+        self.log.info(self.mylog.out_varname(request_name))
+        url = self.get_url(row)
+        self.log.info(self.mylog.out_varname(url))
+        method = self.get_request_method(row)
+        self.log.info(self.mylog.out_varname(method))
+        request_data = self.requestData(row)
+        self.log.info(self.mylog.out_varname(request_data))
+        header = self.headerData(row)
+        self.log.info(self.mylog.out_varname(header))
+        # 获取关联得文件信息
+        files=self.joinFilesData(row)
+        self.log.info(self.mylog.out_varname(files))
+        if files:
+            response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
+                                                files=files,res_format='json')
+            self.log.info(self.mylog.out_varname(response))
+        else:
+            response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
+                                                res_format='json')
+        return response
+
     # 获取预期结果
     @args_None
     def get_expect_data(self, row):
@@ -529,5 +570,6 @@ class GetData(ToolALL):
 if __name__ == '__main__':
     Gd = GetData()
     # for i in range(2,Gd.get_case_line()):
-    for i in range(2,3):
-        print(Gd.headerData(i))
+    for i in range(12,13):
+        print(Gd.joinFilesData(i))
+        # print(Gd.headerData(i))

@@ -81,6 +81,7 @@ class operationRequestData(object):
             str_out =''.join(__nottime)
         return str_out
 
+    # 将str转换为dict
     def strToDict(self, str_in):
         # '''将str转换为dict输出'''
         # '''将带有time关键字的参数放到字符串末尾'''
@@ -117,6 +118,41 @@ class operationRequestData(object):
         else:
             print("参数都没有，还处理个球嘛")
             return None
+
+
+    # 输入tuple（1.file字段：例如：file，head，具体以系统定义为准，2.文件绝对路径）,输出需要得files对象，用于文件上传
+    def out_join_files(self,tuple_in,mode='rb'):
+        # 输出files示例
+        #  files = {'file': ('git.docx', open('C:/Users/Acer/Downloads/git.docx', 'rb'))}
+        if not isinstance(tuple_in,(tuple,list)) and len(tuple_in)==2:
+            print('类型不是tuple或者list，或长度不标准')
+            return None
+        else:
+            tuple_field,tuple_filepath=tuple_in
+            file_index=tuple_filepath.rfind('/')
+            if file_index=='-1':
+                file_index=tuple_filepath.rfind('\\')
+                if not file_index==-1:
+                    filename=tuple_filepath[file_index+1:]
+                else:
+                    filename='git(默认值).docx'
+                    tuple_filepath='C:/Users/Acer/Downloads/git.docx'
+            else:
+                filename=tuple_filepath[file_index+1:]
+            files={tuple_field:(filename,open(tuple_filepath,mode))}
+            return files
+
+    # 将dict转换为str
+    def dictToStr(self,dict_in,space_one='=',space_two='&'):
+        if isinstance(dict_in,dict) and dict_in:
+            str_out = ''
+            for k, v in dict_in.items():
+                str_out += '{}{}{}{}'.format(k, space_one, v, space_two)
+            if str_out[-1] == space_two:
+                str_out = str_out[:-1]
+            return str_out
+        return None
+
     
     #将断言中的true/false/null，转换为python对象
     def assert_pyobject(self,str_in):
@@ -154,13 +190,6 @@ class operationRequestData(object):
             str_in_dict = self.strToDict(str_in)
             # '''完成参数替换'''
             str_in_dict.update(denpend_filed)
-            # for k in str_in_dict.keys():
-            #     if k not in denpend_filed.keys():
-            #         value = str_in_dict[k]
-            #         str_in_dict[k] = value
-            #     else:
-            #         str_in_dict[k] = denpend_filed[k]
-            # # print(self.log.out_varname(str_in_dict))
             return str_in_dict
     
     # 将替换完成的请求数据，转换为str并输出
@@ -179,37 +208,49 @@ class operationRequestData(object):
     def requestDataGeneral(self,str_in,space_one='=',space_two='&'):
         # 将str转换为dict输出
         str_dict=self.strToDict(str_in)
-        str_out = ''
         if str_dict:
-            for k, v in str_dict.items():
-                str_out += '{}{}{}{}'.format(k,space_one,v,space_two)
-            if str_out[-1] == space_two:
-                str_out=str_out[:-1]
+            str_out = self.dictToStr(str_dict,space_one,space_two)
             return str_out.encode()
         else:
             return None
 
-    # ''' 针对服务号请求单独处理，单独处理sign'''
+    # ''' 针对服务号请求单独处理，单独处理sign,输出dict'''
     def requestDatafwh(self,str_in): #特殊处理
-        kw_sign='sign:'#sign关键字
-        str_inSource=re.search("(%s.+)"%(kw_sign),str_in)
-        #处理sign是字符串最后一个参数/非最后一个参数，参数与value之间是否存在空格，的情况
-        if  str_inSource:
-            str_inSource=str_inSource.group()#提前处理sign
-            str_equalSource = re.sub(str_inSource, '{}'.format(kw_sign) + self.fwhConfig['sign_str'] + today, str_in)
-            return self.requestDataGeneral(str_in=str_equalSource)
-        elif str_inSource==None :
-            str_inSource = re.search("%s(\s+){1,}" %(kw_sign), str_in)
-            if str_inSource:
-                str_inSource = str_inSource.group()  # 提前处理sign
-                str_equalSource = re.sub(str_inSource, '{}{}'.format(kw_sign,str_inSource) + self.fwhConfig['sign_str'] + today, str_in)
-                return self.requestDataGeneral(str_in=str_equalSource)
-            else:
-                print("字段“sign”不存在")
-                return None
+        kw_sign='sign'#sign关键字
+        request_dict=self.strToDict(str_in)
+        if kw_sign in request_dict.keys():
+            request_dict[kw_sign]=self.fwhConfig['sign_str'] + today
+            return request_dict
         else:
-            return None
-    
+            print('字段sign不存在')
+            return request_dict
+
+
+    # ''' 针对服务号请求单独处理，单独处理sign,输出str'''
+    def requestDatafwh_str(self, str_in,space_one='=',space_two='&'):  # 特殊处理
+        kw_sign='sign'#sign关键字
+        request_dict=self.strToDict(str_in)
+        if kw_sign in request_dict.keys():
+            request_dict[kw_sign]=self.fwhConfig['sign_str'] + today
+            out_str=self.dictToStr(request_dict,space_one,space_two).encode()
+        else:
+            out_str=self.dictToStr(request_dict,space_one,space_two).encode()
+        return out_str
+
+    # 最终输出得请求数据，此方法输出str
+    def requestToStr(self, str_in,space_one='=',space_two='&'):
+        requests_dict = self.strToDict(str_in)
+        if 'sign' in requests_dict.keys():
+            return self.requestDatafwh_str(str_in,space_one,space_two)
+        else:
+            return self.requestDataGeneral(str_in,space_one,space_two)
+
+    def requestToDict(self,str_in):
+        requests_dict=self.strToDict(str_in)
+        if 'sign' in requests_dict.keys():
+            return self.requestDatafwh(str_in)
+        else:
+            return requests_dict
 
     # ''' 一个用于指定输出的方法，一般不使用'''
     def requestDataCustom(self,str_in,str_custom='=>'):
@@ -476,4 +517,5 @@ if __name__=="__main__":
     # print(v[0])
     response= {'code': 200, 'msg': '成功', 'data': {'current_page': 1, 'last_page': 1, 'per_page': 20, 'total': 6, 'data': [{'course_name_id': 188, 'course_name_sn': 'ZB_01_04_01', 'course_name': '抢跑“开学季”——朗培F4导师开学21天陪练营”', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '1980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1615, 'create_time': '2020-03-17 09:51:43', 'update_time': '2020-03-20 18:30:19', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '艾照友0025', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1615?is_need_share=1', 'card': []}, {'course_name_id': 184, 'course_name_sn': 'ZA010101', 'course_name': '校长，别再那么累--招生赢天下，管理定江山test', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2.00', 'member_price': '1.00', 'least_price': '1.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 13, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1568, 'create_time': '2019-12-21 09:46:54', 'update_time': '2020-03-07 15:04:12', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-民生银行高新支行', 'org_name': '终身', 'create_admin_name': '向鹏贤3755', 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1568?is_need_share=1', 'card': []}, {'course_name_id': 170, 'course_name_sn': 'ZA_01_01_02', 'course_name': '校长，别再那么累--招生赢天下，管理定江山', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2000.00', 'member_price': '1000.00', 'least_price': '100.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 1, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 1562, 'create_time': '2019-08-06 17:50:00', 'update_time': '2020-01-14 16:14:30', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '孟飞', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1562?is_need_share=1', 'card': [{'study_card_type_id': '3', 'study_card_name': '孵化营9800'}]}, {'course_name_id': 2, 'course_name_sn': 'ZA_01_01_01', 'course_name': '校长，别再那么累2.0-打赢营销战', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '280.00', 'member_price': '280.00', 'least_price': '180.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 1560, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-11 13:41:11', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': 'admin', 'share_url': 'https://front.lpcollege.com/#/courseDetails/1560?is_need_share=1', 'card': []}, {'course_name_id': 86, 'course_name_sn': 'ZA_01_03_01', 'course_name': '教培业盈利高增长运营模式3.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '2980.00', 'member_price': '2980.00', 'least_price': '980.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 1, 'is_auto_refund': 1, 'is_refund_audit': 0, 'current_daiding_course_id': 583, 'create_time': '2019-03-01 10:30:21', 'update_time': '2020-03-21 15:37:47', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '秦敏0157', 'share_url': 'https://front.lpcollege.com/#/courseDetails/583?is_need_share=1', 'card': []}, {'course_name_id': 3, 'course_name_sn': 'ZA_01_02_01', 'course_name': '解放校长，管理不再累2.0', 'course_class_id': 7, 'course_broker_id': 1, 'perf_comp_id': 0, 'price': '1980.00', 'member_price': '1980.00', 'least_price': '580.00', 'hr_id': 2, 'org_id': 1, 'meth_id': 2, 'use_card_number': 1, 'use_ticket_number': 1, 'is_deposit': 0, 'is_put': 0, 'is_auto_refund': 0, 'is_refund_audit': 0, 'current_daiding_course_id': 21, 'create_time': '2019-03-01 10:30:21', 'update_time': '2019-12-05 11:23:55', 'delete_time': 0, 'is_auto_legacy': 0, 'legacy_hours': 0, 'course_class_name': '校长必修课', 'course_class_sn': 'G', 'hr_name': '成都朗培教育咨询有限公司', 'meth_name': '教育咨询-中国银行城南支行', 'org_name': '终身', 'create_admin_name': None, 'update_admin_name': '向鹏贤3755', 'share_url': 'https://front.lpcollege.com/#/courseDetails/21?is_need_share=1', 'card': []}]}}
     str1='json'
-    print(request_data_to_str.strOutputCase(None))
+    tuple1=('file', 'C:\\Users\\Acer\\Pictures\\Screenshots\\10086.png')
+    print(request_data_to_str.out_join_files(tuple1))

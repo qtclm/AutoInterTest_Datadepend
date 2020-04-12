@@ -6,12 +6,15 @@ from tool.WriteTestReportToExcel import Write_testReport_excle
 
 class RunTest(GetData):
     # 实例化前完成所有的请求数据依赖处理
-    options=input('是否需要执行用例依赖数据写入操作,确认执行请输入yes,不执行请输入其他任意字符:\n')
-    if options=='yes':
-        write_excle()
-        print('依赖数据写入完成')
-    else:
-        print("跳过写入依赖数据，开始执行测试")
+    @staticmethod
+    def write_depend_data():
+        options=input('是否需要执行用例依赖数据写入操作,确认执行请输入yes,不执行请输入其他任意字符:\n')
+        if options=='yes':
+            write_excle()
+            print('依赖数据写入完成')
+        else:
+            print("跳过写入依赖数据，开始执行测试")
+
     def __init__(self):
         super().__init__()
         self.data=GetData()
@@ -27,11 +30,11 @@ class RunTest(GetData):
         rows_count = self.data.get_case_line()
         self.log.info(self.mylog.out_varname(rows_count))
         for i in range(2,rows_count+1):
-        # for i in range(rows_count,rows_count+1):
+        # for i in range(19,19+1):
             is_run = self.data.get_is_run(i)
             if is_run is True:
                 # ''' 处理请求'''
-                response=self.request_info(i)
+                response=self.data.request_info(i)
                 expect = self.data.expectData(i)  # 断言，也就i是预期结果
                 # '''处理断言'''
                 self.assert_control(i,expect,response)
@@ -42,30 +45,7 @@ class RunTest(GetData):
             #     contine_info='当前用例为第{}条，跳过,is_run={}'.format(i-1,is_run)
             #     self.log.info(self.mylog.out_varname(contine_info))
    
-    # 处理请求
-    def request_info(self,row):
-        response = None
-        request_name=self.get_request_name(row)
-        self.log.info(self.mylog.out_varname(request_name))
-        url = self.data.get_url(row)
-        self.log.info(self.mylog.out_varname(url))
-        method = self.data.get_request_method(row)
-        self.log.info(self.mylog.out_varname(method))
-        request_data = self.data.requestData(row)
-        self.log.info(self.mylog.out_varname(request_data))
-        header = self.data.headerData(row)
-        self.log.info(self.mylog.out_varname(header))
-        try:
-            response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
-                                                res_format='json')
-            self.log.info(self.mylog.out_varname(response))
-            return response
-        except Exception as error:
-            # print(error)
-            self.log.error(self.mylog.out_varname(error))
-            response = self.run_method.run_main(method=method, url=url, data=request_data, headers=header,
-                                                res_format='text')
-            return response
+
         
     #处理断言
     def assert_control(self,row,expect,response):
@@ -147,6 +127,7 @@ class RunTest(GetData):
 
 if __name__ == '__main__':
     run = RunTest()
+    run.write_depend_data()#依赖数据写入
     run.go_on_run()
     # run.create_test_report()
     

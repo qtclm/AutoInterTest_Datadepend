@@ -18,12 +18,13 @@ class global_val:
     key_depend=str(__initnum+9)
     field_depend=str(__initnum+10)
     data=str(__initnum+11)
-    sql_statement=str(__initnum+12)
-    sql_execute_result=str(__initnum+13)
-    redis_statement=str(__initnum+14)
-    redis_execute_result=str(__initnum+15)
-    expect=str(__initnum+16)
-    result=str(__initnum+17)
+    joinFiles=str(__initnum+12)
+    sql_statement=str(__initnum+13)
+    sql_execute_result=str(__initnum+14)
+    redis_statement=str(__initnum+15)
+    redis_execute_result=str(__initnum+16)
+    expect=str(__initnum+17)
+    result=str(__initnum+18)
     #获取case_id及每列的数据
 
 
@@ -99,6 +100,10 @@ def get_field_depend():
 # 获取请求数据
 def get_data():
     return global_val.data
+
+# 获取关键得files信息，用于需要进行文件上传得接口使用
+def get_joinFiles():
+    return global_val.joinFiles
 
 # 获取预期结果
 def get_expect():

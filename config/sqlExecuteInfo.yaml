@@ -28,3 +28,5 @@ SqlExecuteResultRow_3_nc_course_name:
   update_time: 1578288985
   use_card_number: 1
   use_ticket_number: 1
+SqlExecuteResultRow_18_fw_user:
+  keywords: "\u79E6\u654F"
