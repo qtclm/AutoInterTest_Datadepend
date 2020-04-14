@@ -7,6 +7,7 @@ sys.path.append('../')
 from tool.OperationDatas import OperationYaml
 from tool.operation_logging import logs
 from jsonpath_rw import parse
+import json
 today = datetime.datetime.now().strftime('%Y%m%d')  # 获取当前日期
 
 
@@ -363,7 +364,7 @@ class operationRequestData(object):
         return str(current_milli_time())
 
     # 对字典进行排序
-    def sortedDict(dict_in):
+    def sortedDict(self,dict_in):
         if isinstance(dict_in, dict):
             __dict = dict(sorted(dict_in.items(), key=lambda x: x[0]))  # 对字典进行排序
             return __dict
@@ -381,14 +382,11 @@ class operationRequestData(object):
         search_sign_str = 'sign'
         str_dict = self.strToDict(str_in)
         _dict_key_list = [i for i in str_dict.keys()]
-        if not (search_time_str in _dict_key_list):
-            print('timestamp参数不存在')
+        if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
+            print('timestamp或sign参数不存在')
             return None
         str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
         not_sign_dict = str_dict
-        if not (not_sign_dict.get(search_sign_str)):
-            print('sign参数不存在')
-            return None
         not_sign_dict.pop(search_sign_str)  # 去除sign参数
         sort_dict = self.sortedDict(not_sign_dict)  # 对字典进行排序
         input_sign_str = self.dictToStr(sort_dict, space_one='', space_two='')  # sign加密前得字符串
@@ -399,76 +397,45 @@ class operationRequestData(object):
         return out_str
 
     # '''封装服务号请求数据格式为数组得加密字符串处理'''
-    def fwh_sign_sha1_Array(self, str_in, space_one='=', space_two='&'):  # 服务请求签名处理封装（请求格式为数组时的封装）
-        search_time_str = 'timestamp:'
-        search_sign_str = 'sign:'
-        str_inSource = re.search('(%s.+)' % (search_time_str), str_in)  # 匹配字段时间戳（timestamp）
-        if str_inSource is not None:
-            time_str = self.get_timestamp()  # 最终需要的时间戳，13位
-            str_inSource = str_inSource.group()
-            search_str_inSource = re.search('\s', str_inSource)
-            # 匹配时间戳,key与value是否包含空格
-            # 如果包含空格,替换时加上空格，如果不处理会有问题(字符串格式与其他地方不一致)
-            if search_str_inSource is not None:
-                str_equalSource = re.sub(str_inSource,
-                                         '%s%s%s' % (search_time_str, search_str_inSource.group(), time_str),
-                                         str_in)  # 将输入的时间戳替换为需要的时间戳,并加上匹配出来得空格
-            else:
-                str_equalSource = re.sub(str_inSource, '%s%s' % (search_time_str, time_str),
-                                         str_in)  # 将输入的时间戳替换为需要的时间戳
-            input_list_source = str_equalSource.split('\n')  # 以换行符分隔字符串并转换位列表
-            input_list = [a for a in input_list_source
-                          if (search_sign_str or '%s\s' % (search_sign_str)) not in a]  # 列表过滤字段sign
-            out_list = sorted(input_list)  # 对list进行排序
-            out_str = '\n'.join(out_list)  # 将排序后的list拼接为字符串
-            out_list_join_course = [a for a in out_list if '[' in a]  # 去除数组外的其他参数
-            out_list_other = [a for a in out_list if '[' not in a]  # 获取数组外的其他参数
-            out_list_other_str = '\n'.join(out_list_other)
-            input_out_list_other_str = self.requestDataGeneral(out_list_other_str, '',
-                                                               '').decode()  # 获取拼接完成后的请求参数字符串(sign)
-            join_course_list = []  # 数组
-            join_course_dict = {}  # 数组中的dict
-            for index, i in enumerate(out_list_join_course):
-                join_course_index = i.find('[')
-                join_course = i[:join_course_index]  # 匹配join_course
-                Array_index = i[join_course_index:].find(']')  # 匹配[index]的下标
-                Array = i[join_course_index:][:Array_index + 1]  # 取出[index]
-                Array_key_data = i[join_course_index:][Array_index + 1:]  # 取出[0]后面的值
-                search_colon = Array_key_data.find(':')  # 匹配出冒号的index
-                Array_key = Array_key_data[1:search_colon - 1]  # 匹配key(冒号前面的值)并去除[]
-                Array_value = Array_key_data[search_colon + 1:]  # 匹配value(冒号后面的值)
-                join_course_dict[Array_key] = Array_value
-                if (index + 1) % 4 == 0:
-                    # 判断索引为4的倍数时，将dict添加至list，并清空字典（不清除会导致最终插入的值是重复的）
-                    join_course_list.append(join_course_dict)
-                    join_course_dict = {}
-            join_course_str = join_course + str(join_course_list) + input_out_list_other_str  # 拼接加密前的请求字符串
-            out_sign_str = self.sha1_Encry(join_course_str)  # 得到加密后的加密字符串
-            str_inSource_sign = re.search('(%s.+)' % (search_sign_str), str_in)  # 匹配字段签名验证（sign）
-            if str_inSource_sign is not None:
-                str_inSource_sign = str_inSource_sign.group()
-                search_inSource_sign = re.search('\s', str_inSource)
-                # 匹配sign,key与value是否包含空格
-                # 如果包含空格,替换时加上空格，如果不处理会有问题(字符串格式与其他地方不一致)
-                if search_inSource_sign is not None:
-                    str_last_sign = re.sub(str_inSource_sign, '%s%s%s' % (search_sign_str, search_inSource_sign.group(),
-                                                                          out_sign_str),
-                                           str_equalSource)  # 将输入的时间戳替换为需要的时间戳
-                else:
-                    str_last_sign = re.sub(str_inSource_sign, '%s%s' % (search_sign_str, out_sign_str),
-                                           str_equalSource)  # 将输入的时间戳替换为需要的时间戳
-                # print(str_last_sign)
-                str_give = self.requestDataGeneral(str_last_sign)
-                # print(str_give)
-                return str_give
-
-            else:
-                print('输入字符串没有sign对象:sign，无法完成数据转换')
-                return None
-
-        else:
-            print('输入字符串没有时间戳对象:timestamp，无法完成数据转换')
+    def fwh_sign_sha1_Array(self,str_in, space_one='=', space_two='&'):  # 服务请求签名处理封装（请求格式为数组时的封装）
+        search_time_str = 'timestamp'
+        search_sign_str = 'sign'
+        str_dict = self.strToDict(str_in)
+        _dict_key_list = [i for i in str_dict.keys()]
+        if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
+            print('timestamp或sign参数不存在')
             return None
+        str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
+        not_sign_dict = str_dict
+        if not_sign_dict.get(search_sign_str):
+            not_sign_dict.pop(search_sign_str)  # 去除sign参数
+        out_list_join_course = [a for a in _dict_key_list if ('[' in a) and (']' in a)]  # 去除数组外的其他参数
+        out_list_join_course.sort()
+        if not out_list_join_course:
+            return None
+        other_dict = {}
+        out_list_other = [a for a in _dict_key_list if not (('[' in a) and (']' in a))]  # 获取数组外的其他参数
+        out_list_other.remove(search_sign_str)
+        for i in out_list_other:
+            other_dict[i] = str_dict[i]
+        other_str = self.dictToStr(other_dict, space_one='', space_two='')
+        join_course_index = out_list_join_course[0].find('[')
+        join_course_array_index = out_list_join_course[0].find(']')
+        join_course = out_list_join_course[0][:join_course_index]  # 匹配join_course固定字符串
+        join_course_array = out_list_join_course[0][:join_course_array_index + 1]
+        join_course_array_list = len([i for i in out_list_join_course if join_course_array in i])  # 确定每组参数得个数
+        dict_array = {}
+        list_array = []
+        for index, i in enumerate(out_list_join_course):
+            dict_array[i] = not_sign_dict[i]
+            if len(dict_array) == join_course_array_list:
+                list_array.append(json.dumps(dict_array, separators=(',', ':'), ensure_ascii=False))
+                dict_array = {}
+        join_course_str = '{}{}{}'.format(join_course, list_array, other_str)
+        out_sign_str = self.sha1_Encry(join_course_str)
+        str_dict[search_sign_str] = out_sign_str
+        str_give = self.dictToStr(str_dict)
+        return str_give
 
     # '''根据请求参数格式返回对应得加密字符串处理方法'''
     def fwh_request_sha1(self, str_in):
@@ -503,15 +470,25 @@ course_finance_id[1]: 275364
 total_price: 9800
 state: 1'''
     list_in = [1, 2, 3, 4, 5, 6]
-    # print(request_data_to_str.createBatchData(str_batch, list_in))
-    response={"result": [{"_id": "5e8edab8e5f09a0001ca7e7c", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围1",
-                 "startPrice": 11.0, "deliveryPrice": 2.0, "deliveryTime": 3, "geoType": "2", "shapeType": 1,
-                 "radius": "2", "circleCenterGeo": {"latitude": "67.96367756156171", "longitude": "53.098459063846555"},
-                 "status": 1, "sort": 1},
-                {"_id": "5e93cc23e5f09a0001ca7e92", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围2",
-                 "startPrice": 111.0, "deliveryPrice": 22.0, "deliveryTime": 1, "geoType": "2", "shapeType": 1,
-                 "radius": "2", "circleCenterGeo": {"latitude": "67.34563", "longitude": "56.34552"}, "status": 1,
-                 "sort": 1}], "code": 0, "message": "成功[OK]", "message_uuid": "c223f78e-237c-4f9d-9022-640b177a8ab7"}
-    jsonpath='$.result[*].name'
-    print(request_data_to_str.json_path_parse_public(jsonpath, response,'in','范围1'))
+    str_join_course='''order_id:1052
+join_course[0][join_tel]:13130999882
+join_course[0][join_name]:任学雨
+join_course[0][join_card_afterfour]:043X
+join_course[0][join_school]:铭博教育咨询
+join_course[1][join_tel]:13130999883
+join_course[1][join_name]:任学雨
+join_course[1][join_card_afterfour]:043X
+join_course[1][join_school]:铭博教育咨询
+join_course[2][join_tel]:13130999884
+join_course[2][join_name]:任学雨
+join_course[2][join_card_afterfour]:043X
+join_course[2][join_school]:铭博教育咨询
+join_course[3][join_tel]:13130999885
+join_course[3][join_name]:任学雨
+join_course[3][join_card_afterfour]:043X
+join_course[3][join_school]:铭博教育咨询
+timestamp: 1586785422075
+sign: 5f30991d450808c5ec032cb6943140ac0b0e449f'''
+    print(request_data_to_str.fwh_sign_sha1_Array(str_join_course))
+
 
