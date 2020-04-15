@@ -371,16 +371,9 @@ class operationRequestData(object):
         else:
             return None
 
-    # '''使用非通用sign完成加密字符串计算'''
-    def fwh_sign_sha1(self,str_in, space_one='=', space_two='&'):  # 服务号请求签名处理封装
-        '''主要过程：
-            1.替换输入字符串中的时间戳为最新的时间戳
-            2.将字符串中的sign字段过滤掉并通过ascii对其进行排序，因为加密时不需要此字段
-            3.将排序且处理后的字符串通过sha1算法，得到加密字符串
-            4.将得到的加密字符串替换至原字符串'''
-        search_time_str = 'timestamp'
-        search_sign_str = 'sign'
+    def fwh_TimestampAndSign_dispose(self,str_in, search_time_str='timestamp', search_sign_str='sign'):
         str_dict = self.strToDict(str_in)
+        str_dict=self.sortedDict(str_dict)
         _dict_key_list = [i for i in str_dict.keys()]
         if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
             print('timestamp或sign参数不存在')
@@ -388,71 +381,66 @@ class operationRequestData(object):
         str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
         not_sign_dict = str_dict
         not_sign_dict.pop(search_sign_str)  # 去除sign参数
-        sort_dict = self.sortedDict(not_sign_dict)  # 对字典进行排序
-        input_sign_str = self.dictToStr(sort_dict, space_one='', space_two='')  # sign加密前得字符串
+        return not_sign_dict,str_dict,_dict_key_list
+
+    # '''使用非通用sign完成加密字符串计算'''
+    def fwh_sign_sha1(self,str_in, search_sign_str='sign'):  # 服务号请求签名处理封装
+        '''主要过程：
+            1.替换输入字符串中的时间戳为最新的时间戳
+            2.将字符串中的sign字段过滤掉并通过ascii对其进行排序，因为加密时不需要此字段
+            3.将排序且处理后的字符串通过sha1算法，得到加密字符串
+            4.将得到的加密字符串替换至原字符串'''
+        not_sign_dict,str_dict,_dict_key_list=self.fwh_TimestampAndSign_dispose(str_in)#接受去掉sign的dict，原始dict,原始dictkeys
+        if not not_sign_dict:
+            return None
+        input_sign_str = self.dictToStr(not_sign_dict, space_one='', space_two='')  # sign加密前得字符串
         out_sign_str = self.sha1_Encry(input_sign_str)  # 得到加密后的加密字符串
         str_dict[search_sign_str] = out_sign_str  # 得到最终加密完成得参数
-        out_str = self.dictToStr(str_dict, space_one, space_two)
+        out_str = self.dictToStr(str_dict)
         # print(out_str)
         return out_str
 
     # '''封装服务号请求数据格式为数组得加密字符串处理'''
-    def fwh_sign_sha1_Array(self,str_in, space_one='=', space_two='&'):  # 服务请求签名处理封装（请求格式为数组时的封装）
-        search_time_str = 'timestamp'
-        search_sign_str = 'sign'
-        str_dict = self.strToDict(str_in)
-        _dict_key_list = [i for i in str_dict.keys()]
-        if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
-            print('timestamp或sign参数不存在')
+    def fwh_sign_sha1_Array(self,str_in, search_sign_str='sign'):  # 服务请求签名处理封装（请求格式为数组时的封装）
+        not_sign_dict, str_dict, _dict_key_list = self.fwh_TimestampAndSign_dispose(str_in)
+        if not not_sign_dict:
             return None
-        str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
-        not_sign_dict = str_dict
-        if not_sign_dict.get(search_sign_str):
-            not_sign_dict.pop(search_sign_str)  # 去除sign参数
         out_list_join_course = [a for a in _dict_key_list if ('[' in a) and (']' in a)]  # 去除数组外的其他参数
-        out_list_join_course.sort()
-        if not out_list_join_course:
-            return None
-        other_dict = {}
-        out_list_other = [a for a in _dict_key_list if not (('[' in a) and (']' in a))]  # 获取数组外的其他参数
-        out_list_other.remove(search_sign_str)
+        other_dict = {}#存放数组以及sign以外的参数
+        out_list_other = [a for a in _dict_key_list if not ( '[' in a or ']' in a or search_sign_str==a)]  # 获取数组外的其他参数
         for i in out_list_other:
             other_dict[i] = str_dict[i]
-        other_str = self.dictToStr(other_dict, space_one='', space_two='')
+        other_str = self.dictToStr(other_dict, space_one='', space_two='')#数组以及sign以外的参数转换为字符串
         join_course_index = out_list_join_course[0].find('[')
         join_course_array_index = out_list_join_course[0].find(']')
         join_course = out_list_join_course[0][:join_course_index]  # 匹配join_course固定字符串
-        join_course_array = out_list_join_course[0][:join_course_array_index + 1]
+        join_course_array = out_list_join_course[0][:join_course_array_index + 1]#匹配数组参数前缀：join_course[0]
         join_course_array_list = len([i for i in out_list_join_course if join_course_array in i])  # 确定每组参数得个数
-        dict_array = {}
-        list_array = []
-        for index, i in enumerate(out_list_join_course):
-            dict_array[i] = not_sign_dict[i]
-            if len(dict_array) == join_course_array_list:
-                list_array.append(json.dumps(dict_array, separators=(',', ':'), ensure_ascii=False))
-                dict_array = {}
-        join_course_str = '{}{}{}'.format(join_course, list_array, other_str)
-        out_sign_str = self.sha1_Encry(join_course_str)
+        join_course_dict,join_course_list = {},[]
+        for i in out_list_join_course:
+            join_course_dict[i] = not_sign_dict[i]
+            if len(join_course_dict) == join_course_array_list:
+                join_course_list.append(join_course_dict)
+                join_course_dict = {}
+        # ensure_ascii:防止中文被转义,separators:去除字符串中多余的空格
+        join_course_list = json.dumps(join_course_list, ensure_ascii=False, separators=(',', ':'))
+        input_sign_str = '{}{}{}'.format(join_course, join_course_list, other_str)
+        out_sign_str = self.sha1_Encry(input_sign_str)
         str_dict[search_sign_str] = out_sign_str
         str_give = self.dictToStr(str_dict)
         return str_give
 
     # '''根据请求参数格式返回对应得加密字符串处理方法'''
     def fwh_request_sha1(self, str_in):
-        out_str_list = str_in.split('\n')
-        temp_list = []
-        for out_str in out_str_list:
-            search_colon_index = out_str.find(':')  # 匹配冒号的下标
-            key_str = out_str[:search_colon_index]  # 取出冒号前的值，即相应的key(前提是参数中不带冒号)
-            if ('[' and ']') in key_str:  # 如果参数中带有‘[]’,则认为参数是数组参数
-                # print('参数格式为数组的参数%s'%(key_str))
-                temp_list.append(key_str)
-        if temp_list:
-            # 如果list为真，则代表输入的字符串中带有数组参数，调用数组加密方法计算sign
-            # 否则，使用普通的加密方法计算sign
-            return self.fwh_sign_sha1_Array(str_in)
-        else:
+        not_sign_dict, str_dict, _dict_key_list = self.fwh_TimestampAndSign_dispose(
+            str_in)  # 接受去掉sign的dict，原始dict,原始dictkeys
+        if not not_sign_dict:
+            return None
+        _dict_key_list = [i for i in _dict_key_list if ('[' in i and ']' in i)]
+        if not _dict_key_list:
             return self.fwh_sign_sha1(str_in)
+        else:
+            return self.fwh_sign_sha1_Array(str_in)
 
 
 if __name__ == "__main__":
@@ -464,7 +452,9 @@ limit: 10
 uid: 
 keywords: 
 start_date: 
-end_date: '''
+end_date: 
+timestamp: 1586785422075
+sign: 5f30991d450808c5ec032cb6943140ac0b0e449f'''
     str_batch = '''course_finance_id[0]: 275365
 course_finance_id[1]: 275364
 total_price: 9800
@@ -489,6 +479,7 @@ join_course[3][join_card_afterfour]:043X
 join_course[3][join_school]:铭博教育咨询
 timestamp: 1586785422075
 sign: 5f30991d450808c5ec032cb6943140ac0b0e449f'''
-    print(request_data_to_str.fwh_sign_sha1_Array(str_join_course))
+    print(request_data_to_str.fwh_request_sha1(str_join_course))
+    # print(request_data_to_str.fwh_sign_sha1(str_in))
 
 
