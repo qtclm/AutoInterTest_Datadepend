@@ -1,5 +1,5 @@
 import requests
-from tool.operation_logging import MyLog, logs
+from tool.Operation_logging import MyLog, logs
 
 
 class RunMethod(object):
@@ -85,7 +85,6 @@ class RunMethod(object):
             res = self.put_main(url=url, data=data, headers=headers, files=files)
         elif method.lower() == 'delete' or method.upper() == 'DELETE':
             res = self.delete_main(url=url, data=data, headers=headers, files=files)
-            # print(res)
         else:
             self.log.info("暂不支持的请求方式")
             raise Exception("暂不支持的请求方式")
@@ -93,6 +92,7 @@ class RunMethod(object):
             # sort_keys是告诉编码器按照字典排序(a到z)输出,indent参数根据数据格式缩进显示，读起来更加清晰:
             # separators参数的作用是去掉,,:后面的空格,skipkeys可以跳过那些非string对象当作key的处理,
             # 输出真正的中文需要指定ensure_ascii=False
+        # print(res)
         if res:
             try:
                 if res_format.lower() == 'json' or res_format.upper() == 'JSON':  # 以json格式返回数据

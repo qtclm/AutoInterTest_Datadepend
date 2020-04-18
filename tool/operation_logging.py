@@ -5,7 +5,6 @@ import threading
 from datetime import datetime
 import inspect, re
 
-
 class logs(object):
     def __init__(self):
         self.logger = logging.getLogger()

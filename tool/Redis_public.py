@@ -1,19 +1,22 @@
 import redis
-from tool.OperationDatas import OperationYaml
-
+import sys
+sys.path.append("../")
+from tool.Operation_logging import MyLog
 
 class OperationRedis(object):
     '''
     redis操作
     '''''
-    def __init__(self, db_index=0):
-        config = OperationYaml().read_data()
-        self.DataBaseConfig = config['config']
-        self.redisConfig = self.DataBaseConfig['tencent_cloud_redis']
-        self.pool = redis.Connection(host=self.redisConfig['host'], password=self.redisConfig['password'], port=self.redisConfig['port'], db=db_index)
-        self.r = redis.Redis(connection_pool=self.pool)
-        self.pipeline = self.r.pipeline(transaction=True)
-
+    def __init__(self,*args, **kwargs):
+        self.mylog=MyLog.get_log()
+        self.log = self.mylog.get_logger()
+        try:
+            self.pool = redis.ConnectionPool(*args,**kwargs)
+            self.r = redis.Redis(connection_pool=self.pool)
+            self.pipeline = self.r.pipeline(transaction=True)
+        except Exception as error:
+            self.log.error(self.mylog.out_varname(error))
+            print("数据库连接失败，原因为%s"%(error))
     # String操作
     # 在Redis中设置值，默认不存在则创建，存在则修改
 

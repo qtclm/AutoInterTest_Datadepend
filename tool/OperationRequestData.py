@@ -1,3 +1,4 @@
+import json
 import re
 import hashlib
 import time
@@ -5,9 +6,8 @@ import datetime
 import sys
 sys.path.append('../')
 from tool.OperationDatas import OperationYaml
-from tool.operation_logging import logs
+from tool.Operation_logging import logs
 from jsonpath_rw import parse
-import json
 today = datetime.datetime.now().strftime('%Y%m%d')  # 获取当前日期
 
 
@@ -269,34 +269,23 @@ class operationRequestData(object):
             request_dict[kw_sign] = self.fwhConfig['sign_str'] + today
             return request_dict
         else:
-            print('字段sign不存在')
+            # print('字段sign不存在')
             return request_dict
 
     # ''' 针对服务号请求单独处理，单独处理sign,输出str'''
     def requestDatafwh_str(self, str_in, space_one='=', space_two='&'):  # 特殊处理
-        kw_sign = 'sign'  # sign关键字
-        request_dict = self.strToDict(str_in)
-        if kw_sign in request_dict.keys():
-            request_dict[kw_sign] = self.fwhConfig['sign_str'] + today
-            out_str = self.dictToStr(request_dict, space_one, space_two).encode()
-        else:
-            out_str = self.dictToStr(request_dict, space_one, space_two).encode()
+        request_dict=self.requestDatafwh(str_in)
+        out_str = self.dictToStr(request_dict, space_one, space_two).encode()
         return out_str
 
     # 最终输出得请求数据，此方法输出str
     def requestToStr(self, str_in, space_one='=', space_two='&'):
-        requests_dict = self.strToDict(str_in)
-        if 'sign' in requests_dict.keys():
-            return self.requestDatafwh_str(str_in, space_one, space_two)
-        else:
-            return self.requestDataGeneral(str_in, space_one, space_two)
+        out_str = self.requestDatafwh_str(str_in)
+        return out_str
 
     def requestToDict(self, str_in):
-        requests_dict = self.strToDict(str_in)
-        if 'sign' in requests_dict.keys():
-            return self.requestDatafwh(str_in)
-        else:
-            return requests_dict
+        requests_dict = self.requestDatafwh(str_in)
+        return requests_dict
 
     # ''' 一个用于指定输出的方法，一般不使用'''
     def requestDataCustom(self, str_in, str_custom='=>', space_two='\n'):
@@ -328,15 +317,18 @@ class operationRequestData(object):
     def time_to_str(self, timeOrTimeStr=0):  # 时间戳转换为字符串
         try:
             timeStamp = timeOrTimeStr
+            if not timeStamp:
+                timeStamp=time.time()
             timeArray = time.localtime(timeStamp)
-            otherStyleTime = time.strftime("%Y--%m--%d %H:%M:%S", timeArray)
-            # print(otherStyleTime)
+            otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
             return otherStyleTime
         except Exception as error:
             print("数据处理失败，原因为:\n%s" % (error))
 
-    def str_to_time(self, time_to_str='2018-03-10 18:26:27'):  # 字符串转换为时间戳
+    def str_to_time(self, time_to_str='1970-01-01 00:00:00'):  # 字符串转换为时间戳
         try:
+            if time_to_str=='1970-01-01 00:00:00':
+                time_to_str=self.time_to_str()
             d = datetime.datetime.strptime(time_to_str, "%Y-%m-%d %H:%M:%S")
             t = d.timetuple()
             timeStamp = int(time.mktime(t))
@@ -346,15 +338,16 @@ class operationRequestData(object):
             print("数据处理失败，原因为:\n%s" % (error))
 
     # '''生成md5加密字符串'''
-    def md5_Encry(self, str_in):
+    def md5_Encry(self, str_in,upper=None):
         str_out = hashlib.md5()  # 采用md5加密
-        str_out.update(str(str_in + self.fwhConfig['Encay_str']).encode(encoding='utf-8'))
-        print(str_out.hexdigest())
-        return str_out.hexdigest()
+        str_out.update(str(str_in).encode(encoding='utf-8'))
+        md5=str_out.hexdigest()
+        if upper==True:
+            return md5.upper()
+        return  md5
 
     # '''生成sha1加密字符串'''
     def sha1_Encry(self, str_in):  # 对字符串进行加密
-        # print(str_in)
         str_out = hashlib.sha1()  # 采用sha1加密
         str_out.update(str('%s%s' % (str_in, self.fwhConfig['Encay_str'])).encode(encoding='utf-8'))
         return str_out.hexdigest()
@@ -376,7 +369,7 @@ class operationRequestData(object):
         str_dict=self.sortedDict(str_dict)
         _dict_key_list = [i for i in str_dict.keys()]
         if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
-            print('timestamp或sign参数不存在')
+            # print('timestamp或sign参数不存在')
             return None
         str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
         not_sign_dict = str_dict
@@ -452,34 +445,43 @@ limit: 10
 uid: 
 keywords: 
 start_date: 
-end_date: 
-timestamp: 1586785422075
-sign: 5f30991d450808c5ec032cb6943140ac0b0e449f'''
+end_date: '''
     str_batch = '''course_finance_id[0]: 275365
 course_finance_id[1]: 275364
 total_price: 9800
 state: 1'''
-    list_in = [1, 2, 3, 4, 5, 6]
-    str_join_course='''order_id:1052
-join_course[0][join_tel]:13130999882
-join_course[0][join_name]:任学雨
-join_course[0][join_card_afterfour]:043X
-join_course[0][join_school]:铭博教育咨询
-join_course[1][join_tel]:13130999883
-join_course[1][join_name]:任学雨
-join_course[1][join_card_afterfour]:043X
-join_course[1][join_school]:铭博教育咨询
-join_course[2][join_tel]:13130999884
-join_course[2][join_name]:任学雨
-join_course[2][join_card_afterfour]:043X
-join_course[2][join_school]:铭博教育咨询
-join_course[3][join_tel]:13130999885
-join_course[3][join_name]:任学雨
-join_course[3][join_card_afterfour]:043X
-join_course[3][join_school]:铭博教育咨询
-timestamp: 1586785422075
-sign: 5f30991d450808c5ec032cb6943140ac0b0e449f'''
-    print(request_data_to_str.fwh_request_sha1(str_join_course))
-    # print(request_data_to_str.fwh_sign_sha1(str_in))
+    str_in_array = '''join_name[0]: test1
+    join_school[0]: cq1
+    join_tel[0]: 10086
+    join_card[0]: 1234
+    join_name[1]: test2
+    join_school[1]: cq2
+    join_tel[1]: 10087
+    join_card[1]: 1235
+    join_name[2]: test3
+    join_school[2]: cq3
+    join_tel[2]: 10088
+    join_card[2]: 1236
+    page: 1
+    limit: 10
+    uid: 
+    keywords: 
+    start_date: 
+    end_date: 
+    timestamp: 12334
+    sign: 122'''
 
+    list_in = [1, 2, 3, 4, 5, 6]
+    # print(request_data_to_str.createBatchData(str_batch, list_in))
+    response={"result": [{"_id": "5e8edab8e5f09a0001ca7e7c", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围1",
+                 "startPrice": 11.0, "deliveryPrice": 2.0, "deliveryTime": 3, "geoType": "2", "shapeType": 1,
+                 "radius": "2", "circleCenterGeo": {"latitude": "67.96367756156171", "longitude": "53.098459063846555"},
+                 "status": 1, "sort": 1},
+                {"_id": "5e93cc23e5f09a0001ca7e92", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围2",
+                 "startPrice": 111.0, "deliveryPrice": 22.0, "deliveryTime": 1, "geoType": "2", "shapeType": 1,
+                 "radius": "2", "circleCenterGeo": {"latitude": "67.34563", "longitude": "56.34552"}, "status": 1,
+                 "sort": 1}], "code": 0, "message": "成功[OK]", "message_uuid": "c223f78e-237c-4f9d-9022-640b177a8ab7"}
+    jsonpath='$.result[*].name'
+    # print(request_data_to_str.json_path_parse_public(jsonpath, response,'in','范围1'))
+    print(request_data_to_str.fwh_sign_sha1_Array(str_in_array))
 

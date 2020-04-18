@@ -115,7 +115,7 @@ class DependentData(GetData):
     # 将依赖处理完毕的请求数据写入excle
     def writeDependRequestDataToExcle(self,row):
         source_data=self.get_depend_field(row)
-        print(self.mylog.out_varname(source_data))
+        # print(self.mylog.out_varname(source_data))
         falg=None
         if source_data:
             falg=self.data.writeDependFiledToRequestData(row,source_data=source_data)

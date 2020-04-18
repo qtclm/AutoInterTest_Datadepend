@@ -1,5 +1,8 @@
 import pymysql
 from threading import RLock,Lock
+import sys
+sys.path.append("../")
+from tool.Operation_logging import MyLog
 #Lock用于增加互斥锁，防止多线程执行sql报错
 # lock和rlock（递归锁）的区别:
     # 这两种琐的主要区别是：RLock允许在同一线程中被多次acquire。而Lock却不允许这种情况。注意：如果使用RLock，那么acquire和release必须成对出现，
@@ -12,10 +15,7 @@ from threading import RLock,Lock
     # 　　wait方法释放内部所占用的琐，同时线程被挂起，直至接收到通知被唤醒或超时（如果提供了timeout参数的话）。当线程被唤醒并重新占有琐的时候，程序才会继续执行下去。
     # Condition.notify():#唤醒一个挂起的线程（如果存在挂起的线程）。注意：notify()方法不会释放所占用的琐。
     # Condition.notifyAll()　唤醒所有挂起的线程（如果存在挂起的线程）。注意：这些方法不会释放所占用的琐
-import sys
-sys.path.append("../")
-from tool.operation_logging import MyLog,logs
-import os
+
 
 
 class Mysql_operation(object):

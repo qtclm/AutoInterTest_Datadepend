@@ -1,6 +1,5 @@
 import smtplib
 from email.mime.text import MIMEText
-from tool.operation_logging import MyLog,logs
 
 class SendEmail:
     global sendUser
@@ -9,11 +8,7 @@ class SendEmail:
     EmailHost='smtp.163.com'
     sendUser='18160042485@163.com'
     password='5942xphtcl'
-    def __init__(self):
-        self.mylog=MyLog.get_log()
-        self.log = self.mylog.get_logger()
-        
-    def send_email(self, user_list,sub,content):
+    def send_email(self, user_list: object, sub: object, content: object) -> object:
         user="18160042485"+"<"+sendUser+">"
         message=MIMEText(content,_subtype='plain',_charset='utf-8')
         message['Subject']=sub
@@ -36,9 +31,11 @@ class SendEmail:
         user_list = ['18160042485@163.com;248313385@qq.com;']
         sub="接口自动化测试报告"
         content='此次一共运行接口个数为%s个，通过个数为%s个，失败个数为%s个，通过率%s，失败率%s' %(all_num,pass_num,failed_num,pass_result,fail_result)
-        self.log.info(self.mylog.out_varname(content))
         self.send_email(user_list,sub,content)
 if __name__=='__main__':
     sen=SendEmail()
     # user_list=['18160042485@163.com;248313385@qq.com,18883612485@163.com']
+    # sub='接口自动化测试报告'
+    # content='此次一共运行接口个数为%s个，通过个数为%s个，失败个数为%s个，通过率%s，失败率%s' #%(all_num,pass_num,failed_num,pass_result,fail_result)
+    # sen.send_email(user_list,sub,content)
     sen.send_main([1,2,3,4],[2,3,4,5,6,7])

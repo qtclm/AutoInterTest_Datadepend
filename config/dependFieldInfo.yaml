@@ -1,30 +1,42 @@
 dependFieldRow_3:
-  course_broker_id: 1
-  course_class_id: 10
-  course_name: "\u6709\u4E49\u65B9\u667A\u6167\u7236\u6BCD\u5927\u5B66"
-  course_name_id: 195
-  course_name_sn: JB_04_02_01
-  current_daiding_course_id: 1629
+  course_class_id: 1
+  course_name: "\u5168\u7F51\u521B\u65B0\u8425\u9500-\u75AB\u60C5\u7248"
+  course_name_id: 203
+  course_name_sn: ZB_01_08_08
   hr_id: 2
-  is_auto_legacy: 0
   is_auto_refund: 0
   is_deposit: 1
-  is_put: 1
   is_refund_audit: 0
-  least_price: '4900.00'
-  legacy_hours: 0
-  member_price: '4900.00'
-  meth_id: 2
-  org_id: 1
-  perf_comp_id: 0
-  price: '4900.00'
+  least_price: '3980.00'
+  member_price: '0.00'
+  meth_id: 13
+  price: '3980.00'
   use_card_number: 1
-  use_ticket_number: 1
-dependFieldRow_5: {}
-dependFieldRow_7: {}
-dependFieldRow_9: {}
-dependFieldRow_11: {}
-dependFieldRow_14: {}
-dependFieldRow_17: {}
+dependFieldRow_5:
+  nicke_name: "\u6F02\u6773"
+dependFieldRow_7:
+  co_id: '15738'
+  order_id: '11665'
+dependFieldRow_9:
+  ban_id: '8'
+  ban_name: "\u6821\u957F\uFF0C\u522B\u518D\u90A3\u4E48\u7D2F"
+  image: https://crm.mp.image.lpcollege.com/fwh/official/banner/2019-10-24/de88ac1caa5ede52023cae58a2f7ee54.jpg
+  is_show: 1
+  link: https://fuwuhao.lpcollege.com/#/courseDetails/1502
+  sort: '13'
+dependFieldRow_11:
+  card_manage_id: 25
+  least_price: '1.00'
+  number: 1
+  period: 14
+  price: '29800.00'
+  study_card_name: "\u6559\u80B2\u5BB6\u5927\u5B66\u9AD8\u7EA7\u7248"
+dependFieldRow_14:
+  sc_code_id: '1'
+dependFieldRow_17:
+  auth[0]: '['
+  auth[2]: '1'
+  id: '3'
+  name: "\u8BFE\u7A0B\u7BA1\u7406\u5458"
 dependFieldRow_18: {}
 dependFieldRow_20: {}
