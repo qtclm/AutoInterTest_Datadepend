@@ -12,10 +12,9 @@ class OperationMongo(object):
 		try:
 			self.connect_client = pymongo.MongoClient(host=host, port=port)
 			# 连接mydb数据库,账号密码认证
-			self.mydb = self.connect_client['admin']  # 先连接系统默认数据库admin
+			self.mydb = self.connect_client[db]  # 连接指定数据库
 			# #下面一条更改是关键，我竟然尝试成功了，不知道为啥，先记录下踩的坑吧
-			self.mydb.authenticate(user, password, mechanism='SCRAM-SHA-1')  # 让admin数据库去认证密码登录，好吧，既然成功了，
-			self.mydb = self.connect_client[db]#连接指定数据库
+			self.mydb.authenticate(user, password, mechanism='SCRAM-SHA-1')  # 让数据库去认证密码登录，好吧，既然成功了，
 		except BaseException as e:
 			raise BaseException("数据库连接失败，原因：{}".format(e))
 
