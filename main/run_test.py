@@ -125,6 +125,6 @@ if __name__ == '__main__':
     run = RunTest()
     run.write_depend_data()#依赖数据写入
     run.go_on_run()
-    # run.create_test_report()
+    run.create_test_report()
     
     

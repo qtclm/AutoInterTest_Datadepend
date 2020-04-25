@@ -29,4 +29,4 @@ class ToolALL(Tool):
         # self.my_op_fwh=Mysql_test_fwh()
         self.tencent_cloud=Mysql_tencentcloud()
         self.redis=Redis_tencentcloud()
-        self.mongo=Mongo_tencentcloud()
+        # self.mongo=Mongo_tencentcloud()

@@ -7,7 +7,7 @@ import sys
 sys.path.append('../')
 from tool.OperationDatas import OperationYaml
 from tool.Operation_logging import logs
-from jsonpath_rw import parse
+from jsonpath_rw_ext import parse
 today = datetime.datetime.now().strftime('%Y%m%d')  # 获取当前日期
 
 
@@ -40,7 +40,7 @@ class operationRequestData(object):
             return None
 
     # 根据jsonpath表达式获取json对象公共方法,部分功能还需要测试
-    def json_path_parse_public(self,json_path,json_obj,filter_condition=None,filter_value=None):
+    def json_path_parse_public(self,json_path,json_obj):
         if json_path:
             # 定义要获取的key
             json_exe = parse(json_path)
@@ -49,53 +49,11 @@ class operationRequestData(object):
             # math.value返回的是一个list，可以使用索引访问特定的值jsonpath_rw的作用就相当于从json里面提取响应的字段值
             try:
                 math_value = [i.value for i in madle]
-                if not (filter_condition is None and filter_value is None) :
-                    flag=self.Symbol_to_judge(filter_condition)
-                    if  flag:
-                        if isinstance(filter_value,(int,float)):
-                            try:
-                                math_value=[int(i) for i in math_value]
-                            except BaseException as e:
-                                print('filter_value与math_value中的元素数据类型不一致，请检查')
-                                return None
-                            if flag=='<':
-                                math_value = [i for i in math_value if i < filter_value ]
-                            elif flag=='<=':
-                                print(flag)
-                                math_value = [i for i in math_value if i <= filter_value ]
-                            elif flag=='>':
-                                math_value = [i for i in math_value if i > filter_value ]
-                            elif flag=='>=':
-                                math_value = [i for i in math_value if i >= filter_value ]
-                            elif flag in['==','=','==='] :
-                                math_value = [i for i in math_value if i == filter_value]
-                            elif flag=='!=':
-                                math_value = [i for i in math_value if i != filter_value ]
-                            else:
-                                return math_value
-                        elif isinstance(filter_value, (str)):
-                            math_value = [str(i) for i in math_value]
-                            if flag == 'in':
-                                math_value = [i for i in math_value if filter_value in i ]
-                            elif flag=='not in':
-                                math_value = [i for i in math_value if filter_value not in i]
-                            else:
-                                return math_value
                 return math_value
             except IndexError as indexerror:
                 return None
         else:
             return None
-
-    # 根据输入条件返回条件判断
-    def Symbol_to_judge(self,Symbol_condition):
-        if isinstance(Symbol_condition,str):
-            condition_list=['<','<=','>','>=','=','==','===','!=','in','not in']
-            if Symbol_condition in condition_list:
-                return Symbol_condition
-            else:
-                return False
-        return False
 
     # 输入字符串，输出字符串的大小写与首字母大写以及字符串本身
     def strOutputCase(self, str_in):
@@ -218,8 +176,20 @@ class operationRequestData(object):
             elif v == 'null':
                 v = None
             __temp_dict[k] = v
-        # print(__temp_dict)
         return __temp_dict
+
+    # 将json_str中的true/false/null，转换为python对象
+    def jsonStr_pyobject(self,str_in):
+        str_in=str(str_in)
+        str_in = str_in.replace('true', 'True')
+        str_in = str_in.replace('false', 'False')
+        str_in = str_in.replace('null', 'None')
+        try:
+            json_pyobj=eval(str_in)
+            return json_pyobj
+        except BaseException as e:
+            print('字符串处理失败，原因:{}'.format(e))
+            return None
 
     # dependkey生成
     def denpendKeyGenerate(self, str_in, join_str=''):
@@ -352,6 +322,7 @@ class operationRequestData(object):
         str_out.update(str('%s%s' % (str_in, self.fwhConfig['Encay_str'])).encode(encoding='utf-8'))
         return str_out.hexdigest()
 
+
     def get_timestamp(self):  # 输出当前时间的13位时间戳
         current_milli_time = lambda: int(round(time.time() * 1000))  # 输出13位时间戳,round:对浮点数进行四舍五入
         return str(current_milli_time())
@@ -369,7 +340,7 @@ class operationRequestData(object):
         str_dict=self.sortedDict(str_dict)
         _dict_key_list = [i for i in str_dict.keys()]
         if not (search_time_str in _dict_key_list and search_sign_str in _dict_key_list):
-            # print('timestamp或sign参数不存在')
+            print('timestamp或sign参数不存在')
             return None
         str_dict[search_time_str] = self.get_timestamp()  # 将时间替换为最新得时间戳
         not_sign_dict = str_dict
@@ -482,6 +453,6 @@ state: 1'''
                  "radius": "2", "circleCenterGeo": {"latitude": "67.34563", "longitude": "56.34552"}, "status": 1,
                  "sort": 1}], "code": 0, "message": "成功[OK]", "message_uuid": "c223f78e-237c-4f9d-9022-640b177a8ab7"}
     jsonpath='$.result[*].name'
-    # print(request_data_to_str.json_path_parse_public(jsonpath, response,'in','范围1'))
-    print(request_data_to_str.fwh_sign_sha1_Array(str_in_array))
+    print(request_data_to_str.json_path_parse_public(jsonpath, response))
+    # print(request_data_to_str.json_path_parse_public(str_in_array))
 
