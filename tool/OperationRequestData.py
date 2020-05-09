@@ -56,14 +56,25 @@ class operationRequestData(object):
             return None
 
     # 处理robo 3t复制出来的mongo查询结果，序列化为list
-    def mongodata_Serialize(self, str_in):
-        str_out = self.jsonStr_pyobject(str_in)
-        '''处理集合间的分隔符'''
-        mongo_separator_list = re.findall("\/\*\s?\d+\s?\*\/", str_out)
-        if not mongo_separator_list:
+    def mongodata_Serialize(self,str_in,space_one='NumberLong\(\W?\d+\)',space_two="\/\*\s?\d+\s?\*\/"):
+        str_out = str(self.jsonStr_pyobject(str_in))
+        '''处理NumberLong'''
+        mongo_numberLong_list = re.findall(space_one, str_out)
+        # print(mongo_numberLong_list)
+        # print(str_out)
+        if not mongo_numberLong_list:
             return False
+        for i in mongo_numberLong_list:
+            mongo_numberLong = re.search('[-+]?\d+', i)
+            if mongo_numberLong:
+                mongo_numberLong = mongo_numberLong.group()
+                str_out = str_out.replace(i, mongo_numberLong)
+        '''处理集合间的分隔符'''
+        mongo_separator_list = re.findall(space_two, str_out)
+        if not mongo_separator_list:
+            return eval(str_out)
         for i in mongo_separator_list:
-            mongo_separator = re.search('\d+', i)
+            mongo_separator = re.search('[-+]?\d+', i)
             if mongo_separator:
                 if mongo_separator.group() == '1':
                     mongo_separator = '['
@@ -71,15 +82,6 @@ class operationRequestData(object):
                     mongo_separator = ','
                 str_out = str_out.replace(i, mongo_separator)
         str_out += ']'
-        '''处理NumberLong'''
-        mongo_numberLong_list = re.findall('NumberLong\([-+]?\d+\)', str_out)
-        if not mongo_separator_list:
-            return False
-        for i in mongo_numberLong_list:
-            mongo_numberLong = re.search('\d+', i)
-            if mongo_numberLong:
-                mongo_numberLong = mongo_numberLong.group()
-                str_out = str_out.replace(i, mongo_numberLong)
         return eval(str_out)
 
 
@@ -216,8 +218,8 @@ class operationRequestData(object):
             json_pyobj=eval(str_in)
             return json_pyobj
         except BaseException as e:
-            print('字符串处理失败，原因:{}'.format(e))
-            return None
+            # print('字符串处理失败，原因:{}'.format(e))
+            return str_in
 
     # dependkey生成
     def denpendKeyGenerate(self, str_in, join_str=''):
@@ -438,49 +440,6 @@ class operationRequestData(object):
 if __name__ == "__main__":
     request_data_to_str = operationRequestData()
     tuple1 = ('file', 'C:\\Users\\Acer\\Pictures\\Screenshots\\10086.png')
-    # print(request_data_to_str.out_join_files(tuple1))
-    str_in = '''page: 1
-limit: 10
-uid: 
-keywords: 
-start_date: 
-end_date: '''
-    str_batch = '''course_finance_id[0]: 275365
-course_finance_id[1]: 275364
-total_price: 9800
-state: 1'''
-    str_in_array = '''join_name[0]: test1
-    join_school[0]: cq1
-    join_tel[0]: 10086
-    join_card[0]: 1234
-    join_name[1]: test2
-    join_school[1]: cq2
-    join_tel[1]: 10087
-    join_card[1]: 1235
-    join_name[2]: test3
-    join_school[2]: cq3
-    join_tel[2]: 10088
-    join_card[2]: 1236
-    page: 1
-    limit: 10
-    uid: 
-    keywords: 
-    start_date: 
-    end_date: 
-    timestamp: 12334
-    sign: 122'''
-
-    list_in = [1, 2, 3, 4, 5, 6]
-    # print(request_data_to_str.createBatchData(str_batch, list_in))
-    response={"result": [{"_id": "5e8edab8e5f09a0001ca7e7c", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围1",
-                 "startPrice": 11.0, "deliveryPrice": 2.0, "deliveryTime": 3, "geoType": "2", "shapeType": 1,
-                 "radius": "2", "circleCenterGeo": {"latitude": "67.96367756156171", "longitude": "53.098459063846555"},
-                 "status": 1, "sort": 1},
-                {"_id": "5e93cc23e5f09a0001ca7e92", "shopIdenty": 810109299, "brandIdenty": 32900, "name": "范围2",
-                 "startPrice": 111.0, "deliveryPrice": 22.0, "deliveryTime": 1, "geoType": "2", "shapeType": 1,
-                 "radius": "2", "circleCenterGeo": {"latitude": "67.34563", "longitude": "56.34552"}, "status": 1,
-                 "sort": 1}], "code": 0, "message": "成功[OK]", "message_uuid": "c223f78e-237c-4f9d-9022-640b177a8ab7"}
-    jsonpath='$.result[*].name'
-    print(request_data_to_str.json_path_parse_public(jsonpath, response))
-    # print(request_data_to_str.json_path_parse_public(str_in_array))
+    dictstr1 = '{ "_id" : "2126170720766108700", "address" : "光信·帝景华府B座", "createdAt" : "2020-05-06T11:26:37", "activeAt" : "2020-05-06T11:26:37", "deliverFee" : "19.0", "description" : "请电话联系我", "groups" : [{ "name" : "1号篮子", "type" : "normal", "items" : [{ "_id" : { "$numberLong" : "1685252512" }, "ptId" : { "$numberLong" : "1685252512" }, "skuId" : "100000012273522800", "name" : "水晶粉丝-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "10.0", "quantity" : 1, "total" : "10.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682791733" } }, { "_id" : { "$numberLong" : "1685252518" }, "ptId" : { "$numberLong" : "1685252518" }, "skuId" : "100000012276433008", "name" : "千层毛肚-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "39.0", "quantity" : 1, "total" : "39.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682801601" } }, { "_id" : { "$numberLong" : "1685244549" }, "ptId" : { "$numberLong" : "1685244549" }, "skuId" : "100000012286323824", "name" : "鳕鱼蟹味棒-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "40.0", "quantity" : 1, "total" : "40.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682801592" } }, { "_id" : { "$numberLong" : "1675980124" }, "ptId" : { "$numberLong" : "1675980124" }, "skuId" : "100000002765522032", "name" : "经典hi辣涮锅味碟", "categoryId" : { "$numberLong" : "1" }, "price" : "18.0", "quantity" : 1, "total" : "18.0", "newSpecs" : [], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1675765408" } }, { "_id" : { "$numberLong" : "1685270713" }, "ptId" : { "$numberLong" : "1685270713" }, "skuId" : "100000012286332016", "name" : "捞派麻辣滑牛肉-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "27.0", "quantity" : 1, "total" : "27.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682782218" } }, { "_id" : { "$numberLong" : "1763326880" }, "ptId" : { "$numberLong" : "1763326880" }, "skuId" : "100000092227928176", "name" : "捞派巴沙鱼片-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "22.0", "quantity" : 1, "total" : "22.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1746550949" } }, { "_id" : { "$numberLong" : "1685270687" }, "ptId" : { "$numberLong" : "1685270687" }, "skuId" : "100000012286300272", "name" : "包心生菜-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "20.0", "quantity" : 1, "total" : "20.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682779079" } }, { "_id" : { "$numberLong" : "1820533710" }, "ptId" : { "$numberLong" : "1820533710" }, "skuId" : "100000150881874032", "name" : "年糕-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "9.0", "quantity" : 1, "total" : "9.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1792283631" } }, { "_id" : { "$numberLong" : "1685257021" }, "ptId" : { "$numberLong" : "1685257021" }, "skuId" : "100000012273516656", "name" : "豆腐-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "20.0", "quantity" : 1, "total" : "20.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682787034" } }, { "_id" : { "$numberLong" : "1685247709" }, "ptId" : { "$numberLong" : "1685247709" }, "skuId" : "100000012273515632", "name" : "腐竹-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "13.0", "quantity" : 1, "total" : "13.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682779085" } }] }], "book" : false, "orderId" : "2126170720766108700", "phoneList" : ["17093036938,533"], "shopId" : { "$numberLong" : "802181" }, "openId" : "", "shopName" : "海底捞火锅(新城市花园店)", "daySn" : 2, "status" : "unprocessed", "refundStatus" : "noRefund", "userId" : { "$numberLong" : "-665770651" }, "totalPrice" : "237.0", "originalPrice" : "237.0", "consignee" : "D**", "deliveryGeo" : "112.55120488,37.81338598", "deliveryPoiAddress" : "光信·帝景华府B座", "invoiced" : false, "income" : "229.89", "serviceRate" : "0.03", "serviceFee" : "-7.11", "hongbao" : "0.0", "packageFee" : "0.0", "activityTotal" : "0.0", "shopPart" : "0.0", "elemePart" : "0.0", "downgraded" : false, "taxpayerId" : "", "vipDeliveryFeeDiscount" : "0.0", "consigneePhones" : ["151****2063"], "userExtraInfo" : { "giverPhone" : "", "greeting" : "" }, "orderActivities" : [], "orderBusinessType" : 0, "pickUpTime" : "1970-01-01T08:00:00", "pickUpNumber" : "0", "merchantDeliverySubsidy" : "0.0", "userIdStr" : "1000061609317", "allowanceServiceFee" : "0.0", "baseLogisticsServiceFee" : "0.0", "timeIntervalMarkUpFee" : "0.0" }'
+    request_data_to_str.mongodata_Serialize(dictstr1)
 
