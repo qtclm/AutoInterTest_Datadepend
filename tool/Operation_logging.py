@@ -20,13 +20,13 @@ class logs(object):
         if not os.path.exists(logs_dir):
             os.makedirs(logs_dir)
         # 修改log保存位置
-        # timestamp =str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S-out"))
-        timestamp='run'
-        logfilename = '%s.log' % timestamp
-        logfilepath = os.path.join(logs_dir, logfilename)
+        timestamp =str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S-out"))
+        # timestamp='run'
+        logfilename = '%s.log' %(timestamp)
+        self.logfilepath = os.path.join(logs_dir, logfilename)
 
         if not self.logger.handlers:
-            self.rotatingFileHandler = logging.handlers.RotatingFileHandler(filename=logfilepath,
+            self.rotatingFileHandler = logging.handlers.RotatingFileHandler(filename=self.logfilepath,
                                                                        maxBytes=1024 * 1024 * 50,
                                                                        backupCount=5,encoding='utf-8')
             # 设置输出格式
@@ -42,8 +42,6 @@ class logs(object):
             # self.logger.addHandler(console)
             self.logger.addHandler(self.rotatingFileHandler)
             self.logger.setLevel(logging.INFO)
-
-
 
     def get_logger(self):
         """
@@ -62,6 +60,13 @@ class logs(object):
             last_str = '{}:{}'.format(key, str_in)
             return last_str
 
+    # 自动清理空日志文件
+    def __del__(self):
+        logging.shutdown()
+        if os.stat(self.logfilepath).st_size == 0:
+            os.remove(self.logfilepath)
+
+
 class MyLog(object):
     log = None
     mutex = threading.Lock()
@@ -77,8 +82,6 @@ class MyLog(object):
             MyLog.mutex.release()
 
         return MyLog.log
-
-
 
 
 

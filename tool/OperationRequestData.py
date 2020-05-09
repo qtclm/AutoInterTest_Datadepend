@@ -55,6 +55,34 @@ class operationRequestData(object):
         else:
             return None
 
+    # 处理robo 3t复制出来的mongo查询结果，序列化为list
+    def mongodata_Serialize(self, str_in):
+        str_out = self.jsonStr_pyobject(str_in)
+        '''处理集合间的分隔符'''
+        mongo_separator_list = re.findall("\/\*\s?\d+\s?\*\/", str_out)
+        if not mongo_separator_list:
+            return False
+        for i in mongo_separator_list:
+            mongo_separator = re.search('\d+', i)
+            if mongo_separator:
+                if mongo_separator.group() == '1':
+                    mongo_separator = '['
+                else:
+                    mongo_separator = ','
+                str_out = str_out.replace(i, mongo_separator)
+        str_out += ']'
+        '''处理NumberLong'''
+        mongo_numberLong_list = re.findall('NumberLong\([-+]?\d+\)', str_out)
+        if not mongo_separator_list:
+            return False
+        for i in mongo_numberLong_list:
+            mongo_numberLong = re.search('\d+', i)
+            if mongo_numberLong:
+                mongo_numberLong = mongo_numberLong.group()
+                str_out = str_out.replace(i, mongo_numberLong)
+        return eval(str_out)
+
+
     # 输入字符串，输出字符串的大小写与首字母大写以及字符串本身
     def strOutputCase(self, str_in):
         if isinstance(str_in, str):
