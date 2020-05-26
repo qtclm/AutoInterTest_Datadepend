@@ -9,6 +9,7 @@ from tool.OperationDatas import OperationYaml
 from tool.Operation_logging import logs
 from jsonpath_rw_ext import parse
 today = datetime.datetime.now().strftime('%Y%m%d')  # 获取当前日期
+import dateutil.parser
 
 
 class operationRequestData(object):
@@ -55,20 +56,53 @@ class operationRequestData(object):
         else:
             return None
 
+    # 将IsoDate转换为时间字符串，IsoDate主要是mongo存储得时间格式
+    def IsoDateToString(self,IsoDate_in=None,time_diffence=0):
+        '''time_diffence:时间差，目前只支持指定小时'''
+        if IsoDate_in is None:
+            IsoDate_in = datetime.datetime.now()
+        else:
+            IsoDate_in = IsoDate_in
+            re_date = re.search('(\d.+\d)', IsoDate_in)
+            if re_date:
+                re_date = re_date.group()
+                if ":" in re_date:
+                    # print(re_date)
+                    IsoDate_in = dateutil.parser.parse(re_date)  # 转换为isodate为时间字符串
+                    time_out = datetime.datetime.strptime(IsoDate_in.strftime('%Y-%m-%d %H:%M:%S'), '%Y-%m-%d %H:%M:%S')
+                    # datetime.timedelta对象代表两个时间之间的时间差,这里需要计算八个小时后得时间，所以指定hours=8，
+                    # 当前也指定其他时间对象day、seconds、microseconds、milliseconds、minutes、hours、weeks、fold等
+                    delta = datetime.timedelta(hours=time_diffence)
+                    IsoDate_out = str(time_out + delta)
+                else:
+                    # print(re_date)
+                    IsoDate_out=self.time_to_str(re_date)
+                return IsoDate_out
+            else:
+                return IsoDate_in
+
     # 处理robo 3t复制出来的mongo查询结果，序列化为list
-    def mongodata_Serialize(self,str_in,space_one='NumberLong\(\W?\d+\)',space_two="\/\*\s?\d+\s?\*\/"):
+    def mongodata_Serialize(self,str_in,space_one='NumberLong\(\W?\d+\)',space_two="\/\*\s?\d+\s?\*\/",space_date='ISODate\(.*\)'):
         str_out = str(self.jsonStr_pyobject(str_in))
         '''处理NumberLong'''
         mongo_numberLong_list = re.findall(space_one, str_out)
-        # print(mongo_numberLong_list)
-        # print(str_out)
-        if not mongo_numberLong_list:
-            return False
-        for i in mongo_numberLong_list:
-            mongo_numberLong = re.search('[-+]?\d+', i)
-            if mongo_numberLong:
-                mongo_numberLong = mongo_numberLong.group()
-                str_out = str_out.replace(i, mongo_numberLong)
+        if  mongo_numberLong_list:
+            for i in mongo_numberLong_list:
+                mongo_numberLong = re.search('[-+]?\d+', i)
+                if mongo_numberLong:
+                    mongo_numberLong = mongo_numberLong.group()
+                    str_out = str_out.replace(i, mongo_numberLong)
+        else:
+            str_out=str_out
+        '''处理IsoDate'''
+        IsoDate=re.findall(space_date,str_out)
+        if IsoDate:
+            for IsoDate_in_str in list(set(IsoDate)):
+                # print(IsoDate_in_str)
+                IsoDate_out_str=str(self.str_to_time(self.IsoDateToString(IsoDate_in=IsoDate_in_str))*1000)
+                str_out=str_out.replace(IsoDate_in_str,IsoDate_out_str)
+        else:
+            str_out=str_out
         '''处理集合间的分隔符'''
         mongo_separator_list = re.findall(space_two, str_out)
         if not mongo_separator_list:
@@ -197,23 +231,19 @@ class operationRequestData(object):
     # 将断言中的true/false/null，转换为python对象
     def assert_pyobject(self, str_in):
         str_dict = self.strToDict(str_in)
-        __temp_dict = {}
-        for k, v in str_dict.items():
-            if v == 'true':
-                v = True
-            elif v == 'flase':
-                v = False
-            elif v == 'null':
-                v = None
-            __temp_dict[k] = v
-        return __temp_dict
+        for k in str_dict:
+            if str_dict[k] == 'true':
+                str_dict[k] = True
+            elif str_dict[k]== 'flase':
+                str_dict[k] = False
+            elif str_dict[k] == 'null':
+                str_dict[k] = None
+        return str_dict
 
     # 将json_str中的true/false/null，转换为python对象
     def jsonStr_pyobject(self,str_in):
-        str_in=str(str_in)
-        str_in = str_in.replace('true', 'True')
-        str_in = str_in.replace('false', 'False')
-        str_in = str_in.replace('null', 'None')
+        str_in = str(str_in).replace('true', 'True').replace('false', 'False').replace('null', 'None')\
+            .replace('<NULL>', 'None')
         try:
             json_pyobj=eval(str_in)
             return json_pyobj
@@ -316,7 +346,9 @@ class operationRequestData(object):
 
     def time_to_str(self, timeOrTimeStr=0):  # 时间戳转换为字符串
         try:
-            timeStamp = timeOrTimeStr
+            timeStamp = int(timeOrTimeStr)
+            if len(str(timeStamp))>=13:
+                timeStamp/=1000
             if not timeStamp:
                 timeStamp=time.time()
             timeArray = time.localtime(timeStamp)
@@ -440,6 +472,50 @@ class operationRequestData(object):
 if __name__ == "__main__":
     request_data_to_str = operationRequestData()
     tuple1 = ('file', 'C:\\Users\\Acer\\Pictures\\Screenshots\\10086.png')
-    dictstr1 = '{ "_id" : "2126170720766108700", "address" : "光信·帝景华府B座", "createdAt" : "2020-05-06T11:26:37", "activeAt" : "2020-05-06T11:26:37", "deliverFee" : "19.0", "description" : "请电话联系我", "groups" : [{ "name" : "1号篮子", "type" : "normal", "items" : [{ "_id" : { "$numberLong" : "1685252512" }, "ptId" : { "$numberLong" : "1685252512" }, "skuId" : "100000012273522800", "name" : "水晶粉丝-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "10.0", "quantity" : 1, "total" : "10.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682791733" } }, { "_id" : { "$numberLong" : "1685252518" }, "ptId" : { "$numberLong" : "1685252518" }, "skuId" : "100000012276433008", "name" : "千层毛肚-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "39.0", "quantity" : 1, "total" : "39.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682801601" } }, { "_id" : { "$numberLong" : "1685244549" }, "ptId" : { "$numberLong" : "1685244549" }, "skuId" : "100000012286323824", "name" : "鳕鱼蟹味棒-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "40.0", "quantity" : 1, "total" : "40.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682801592" } }, { "_id" : { "$numberLong" : "1675980124" }, "ptId" : { "$numberLong" : "1675980124" }, "skuId" : "100000002765522032", "name" : "经典hi辣涮锅味碟", "categoryId" : { "$numberLong" : "1" }, "price" : "18.0", "quantity" : 1, "total" : "18.0", "newSpecs" : [], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1675765408" } }, { "_id" : { "$numberLong" : "1685270713" }, "ptId" : { "$numberLong" : "1685270713" }, "skuId" : "100000012286332016", "name" : "捞派麻辣滑牛肉-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "27.0", "quantity" : 1, "total" : "27.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682782218" } }, { "_id" : { "$numberLong" : "1763326880" }, "ptId" : { "$numberLong" : "1763326880" }, "skuId" : "100000092227928176", "name" : "捞派巴沙鱼片-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "22.0", "quantity" : 1, "total" : "22.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1746550949" } }, { "_id" : { "$numberLong" : "1685270687" }, "ptId" : { "$numberLong" : "1685270687" }, "skuId" : "100000012286300272", "name" : "包心生菜-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "20.0", "quantity" : 1, "total" : "20.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682779079" } }, { "_id" : { "$numberLong" : "1820533710" }, "ptId" : { "$numberLong" : "1820533710" }, "skuId" : "100000150881874032", "name" : "年糕-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "9.0", "quantity" : 1, "total" : "9.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1792283631" } }, { "_id" : { "$numberLong" : "1685257021" }, "ptId" : { "$numberLong" : "1685257021" }, "skuId" : "100000012273516656", "name" : "豆腐-一份", "categoryId" : { "$numberLong" : "1" }, "price" : "20.0", "quantity" : 1, "total" : "20.0", "newSpecs" : [{ "name" : "规格", "value" : "一份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682787034" } }, { "_id" : { "$numberLong" : "1685247709" }, "ptId" : { "$numberLong" : "1685247709" }, "skuId" : "100000012273515632", "name" : "腐竹-半份", "categoryId" : { "$numberLong" : "1" }, "price" : "13.0", "quantity" : 1, "total" : "13.0", "newSpecs" : [{ "name" : "规格", "value" : "半份" }], "attributes" : [], "extendCode" : "", "barCode" : "", "weight" : "1.0", "vfoodId" : { "$numberLong" : "1682779085" } }] }], "book" : false, "orderId" : "2126170720766108700", "phoneList" : ["17093036938,533"], "shopId" : { "$numberLong" : "802181" }, "openId" : "", "shopName" : "海底捞火锅(新城市花园店)", "daySn" : 2, "status" : "unprocessed", "refundStatus" : "noRefund", "userId" : { "$numberLong" : "-665770651" }, "totalPrice" : "237.0", "originalPrice" : "237.0", "consignee" : "D**", "deliveryGeo" : "112.55120488,37.81338598", "deliveryPoiAddress" : "光信·帝景华府B座", "invoiced" : false, "income" : "229.89", "serviceRate" : "0.03", "serviceFee" : "-7.11", "hongbao" : "0.0", "packageFee" : "0.0", "activityTotal" : "0.0", "shopPart" : "0.0", "elemePart" : "0.0", "downgraded" : false, "taxpayerId" : "", "vipDeliveryFeeDiscount" : "0.0", "consigneePhones" : ["151****2063"], "userExtraInfo" : { "giverPhone" : "", "greeting" : "" }, "orderActivities" : [], "orderBusinessType" : 0, "pickUpTime" : "1970-01-01T08:00:00", "pickUpNumber" : "0", "merchantDeliverySubsidy" : "0.0", "userIdStr" : "1000061609317", "allowanceServiceFee" : "0.0", "baseLogisticsServiceFee" : "0.0", "timeIntervalMarkUpFee" : "0.0" }'
+    dictstr1 = '''{
+    "reviewId" : NumberLong(25441579),
+    "shopId" : NumberLong(810016429),
+    "source" : 82,
+    "itemRates" : [
+        {
+            "itemRateId" : "90024483",
+            "shopId" : "837921",
+            "itemId" : "1709397295",
+            "itemName" : "山药-半份",
+            "rating" : 5,
+            "rateContent" : "",
+            "ratedAt" : ISODate("2020-01-12T17:44:15.000+08:00"),
+            "pictures" : []
+        },
+        {
+            "itemRateId" : "90024507",
+            "shopId" : "837921",
+            "itemId" : "1803576126",
+            "itemName" : "血旺-半份",
+            "rating" : 5,
+            "rateContent" : "",
+            "ratedAt" : ISODate("2020-01-12T17:44:15.000+08:00"),
+            "pictures" : []
+        },
+        {
+            "itemRateId" : "90024499",
+            "shopId" : "837921",
+            "itemId" : "1785933773",
+            "itemName" : "用餐人数选择",
+            "rating" : 4,
+            "rateContent" : "",
+            "ratedAt" : ISODate("2020-01-12T17:44:15.000+08:00"),
+            "pictures" : []
+        },
+        {
+            "itemRateId" : "90024459",
+            "shopId" : "837921",
+            "itemId" : "1706953462",
+            "itemName" : "火锅牛排-半份",
+            "rating" : 5,
+            "rateContent" : "",
+            "ratedAt" : ISODate("2020-01-12T17:44:15.000+08:00"),
+            "pictures" : []
+        }'''
     request_data_to_str.mongodata_Serialize(dictstr1)
 
