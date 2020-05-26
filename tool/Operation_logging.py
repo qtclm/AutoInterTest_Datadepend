@@ -63,8 +63,11 @@ class logs(object):
     # 自动清理空日志文件
     def __del__(self):
         logging.shutdown()
-        if os.stat(self.logfilepath).st_size == 0:
-            os.remove(self.logfilepath)
+        try:
+            if os.stat(self.logfilepath).st_size == 0:
+                os.remove(self.logfilepath)
+        finally:
+            return None
 
 
 class MyLog(object):
